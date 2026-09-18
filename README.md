@@ -11,6 +11,9 @@ Everything here is **pure-Python standard library** (no numpy/scipy) plus a
 **zero-dependency web explorer**, so the whole result is reproducible from source
 on a stock Python 3 install.
 
+**▶ Live interactive explorer + poll:** https://claude.ai/artifact/2u277G67CgFVJPmBDXaa9h
+*(private to the artifact owner; share from the page's Share menu to let others vote).*
+
 ---
 
 ## TL;DR results
