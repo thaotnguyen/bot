@@ -130,6 +130,12 @@ _ROB_Y = [0.0000, 0.0620, 0.1240, 0.1860, 0.2480, 0.3100, 0.3720, 0.4340,
           0.9394, 0.9761, 1.0000]
 
 
+def azimuthal_equidistant(lat: float, lon: float) -> Tuple[float, float]:
+    # Polar aspect: distance from the north pole is exact for every point.
+    r = PI / 2 - lat            # colatitude in [0, pi]
+    return r * math.sin(lon), -r * math.cos(lon)
+
+
 def robinson(lat: float, lon: float) -> Tuple[float, float]:
     ad = abs(math.degrees(lat)) / 5.0
     i = int(math.floor(ad))
@@ -156,6 +162,7 @@ CLASSICS: Dict[str, Callable[[float, float], Tuple[float, float]]] = {
     "Robinson": robinson,
     "Eckert IV": eckert4,
     "Equal Earth": equal_earth,
+    "Azimuthal Equidist.": azimuthal_equidistant,
 }
 
 # Whether each classic is theoretically equal-area / conformal (for validation).

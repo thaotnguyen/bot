@@ -1,5 +1,5 @@
 <title>Pareto Atlas</title>
-<meta name="description" content="An autoresearched world map projection that beats Winkel Tripel.">
+<meta name="description" content="Autoresearched world map projections optimizing shape, area and distance.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -8,7 +8,7 @@
   --ground:#eaeef2; --surface:#ffffff; --surface-2:#f4f7fa; --inset:#eef2f6;
   --ink:#14202b; --muted:#5c6b7a; --faint:#8695a3; --line:#d7dee5;
   --ocean:#d5e5f0; --land:#cbd3c2; --landline:#9fb08f;
-  --shape:#1d6fb8; --area:#d98a2b; --ours:#b5397f; --ours-soft:#f0d9e6;
+  --shape:#1d6fb8; --area:#d98a2b; --dist:#2f9e73; --ours:#b5397f; --ours-soft:#f0d9e6;
   --good:#2f8f5b; --bad:#c0392b;
   --disp:"Fraunces",Georgia,serif;
   --ui:"IBM Plex Sans",system-ui,sans-serif;
@@ -20,24 +20,22 @@
   --ground:#0b131d; --surface:#101b28; --surface-2:#16263a; --inset:#0d1723;
   --ink:#e7edf3; --muted:#93a4b5; --faint:#6a7d90; --line:#23374a;
   --ocean:#123049; --land:#33463b; --landline:#4c6a52;
-  --shape:#59a6e6; --area:#e6a856; --ours:#e766a8; --ours-soft:#3a2033;
+  --shape:#59a6e6; --area:#e6a856; --dist:#4cc493; --ours:#e766a8; --ours-soft:#3a2033;
 }}
 :root[data-theme="dark"]{
   --ground:#0b131d; --surface:#101b28; --surface-2:#16263a; --inset:#0d1723;
   --ink:#e7edf3; --muted:#93a4b5; --faint:#6a7d90; --line:#23374a;
   --ocean:#123049; --land:#33463b; --landline:#4c6a52;
-  --shape:#59a6e6; --area:#e6a856; --ours:#e766a8; --ours-soft:#3a2033;
+  --shape:#59a6e6; --area:#e6a856; --dist:#4cc493; --ours:#e766a8; --ours-soft:#3a2033;
 }
 *{box-sizing:border-box}
 body{background:var(--ground);color:var(--ink);font-family:var(--ui);line-height:1.55;
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-.wrap{max-width:1160px;margin:0 auto;padding-inline:20px;padding-block:0}
+.wrap{max-width:1160px;margin:0 auto;padding-inline:20px}
 a{color:var(--shape)}
 h1,h2,h3{margin:0;text-wrap:balance;font-weight:600}
 .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
-
-/* header */
 header{padding-block:40px 26px;border-bottom:1px solid var(--line)}
 h1{font-family:var(--disp);font-size:clamp(38px,7vw,68px);line-height:.98;letter-spacing:-.01em}
 .thesis{margin-top:16px;max-width:60ch;font-size:clamp(15px,2.2vw,18px);color:var(--muted)}
@@ -49,12 +47,10 @@ h1{font-family:var(--disp);font-size:clamp(38px,7vw,68px);line-height:.98;letter
 .chip .v{font-family:var(--disp);font-size:22px;font-weight:600;line-height:1.1}
 .chip.win .v{color:var(--ours)}
 .chip .d{font-size:11.5px;color:var(--muted)}
-
-/* layout */
 section{padding-block:34px}
 .lede{max-width:64ch;color:var(--muted);margin-top:8px}
 h2{font-family:var(--disp);font-size:clamp(24px,4vw,34px);letter-spacing:-.01em}
-.studio{display:grid;grid-template-columns:1.55fr 1fr;gap:20px;align-items:start}
+.studio{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:start}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh)}
 .mapcard{padding:14px}
 .mapwrap{position:relative;width:100%;aspect-ratio:2/1.15;border-radius:10px;overflow:hidden;background:var(--inset)}
@@ -66,34 +62,28 @@ canvas{display:block;width:100%;height:100%}
 .mapcap .sub{font-size:13px;color:var(--muted)}
 .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}
 .legend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px}
-
-.panel{padding:18px;display:flex;flex-direction:column;gap:18px}
+.panel{padding:18px;display:flex;flex-direction:column;gap:16px}
 .field label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;
   text-transform:uppercase;color:var(--faint);margin-bottom:7px}
-select,.btn{font-family:var(--ui);font-size:14px;color:var(--ink)}
 select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);
-  appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  color:var(--ink);font-family:var(--ui);font-size:14px;appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
   background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
-.sliderbox .ends{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-bottom:4px}
-.sliderbox .ends .s{color:var(--shape)}.sliderbox .ends .a{color:var(--area)}
-input[type=range]{width:100%;accent-color:var(--ours);margin:2px 0}
-.readout{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.metric{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-.metric .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
-.metric .v{font-family:var(--mono);font-size:20px;font-weight:500;margin-top:2px}
-.metric.s .v{color:var(--shape)}.metric.a .v{color:var(--area)}
-.metric .cmp{font-size:11px;color:var(--muted);margin-top:2px}
+.tri{width:100%;touch-action:none;cursor:crosshair;display:block}
+.trihint{font-size:12px;color:var(--muted);margin-top:2px;text-align:center}
+.readout{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.metric{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
+.metric .k{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+.metric .v{font-family:var(--mono);font-size:17px;font-weight:500;margin-top:2px}
+.metric.s .v{color:var(--shape)}.metric.a .v{color:var(--area)}.metric.d .v{color:var(--dist)}
+.metric .cmp{font-size:10.5px;color:var(--muted);margin-top:1px}
 .toggles{display:flex;flex-wrap:wrap;gap:8px}
 .tg{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border:1px solid var(--line);
   border-radius:9px;background:var(--surface-2);cursor:pointer;font-size:13px;user-select:none}
 .tg input{accent-color:var(--ours)}
-.scatterbox{margin-top:2px}
-.scatterbox svg{width:100%;height:auto;display:block}
-
-/* poll */
+.radarbox svg{width:100%;height:auto;display:block}
 .pollhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
-.mode{font-family:var(--mono);font-size:11px;color:var(--faint);border:1px solid var(--line);
-  padding:4px 9px;border-radius:20px}
+.mode{font-family:var(--mono);font-size:11px;color:var(--faint);border:1px solid var(--line);padding:4px 9px;border-radius:20px}
 .mode.live{color:var(--good);border-color:color-mix(in srgb,var(--good) 40%,var(--line))}
 .duel{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;margin-top:18px}
 .duelcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);
@@ -103,25 +93,24 @@ input[type=range]{width:100%;accent-color:var(--ours);margin:2px 0}
 .duelcard .mapwrap{aspect-ratio:2/1.1}
 .duelcard .nm{margin-top:9px;font-family:var(--disp);font-size:17px;font-weight:600}
 .duelcard .why{font-size:12px;color:var(--muted);min-height:2.5em}
+.tag2{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;margin-left:6px;
+  padding:1px 6px;border-radius:20px;background:var(--ours-soft);color:var(--ours)}
 .vs{font-family:var(--disp);font-style:italic;font-size:22px;color:var(--faint)}
 .skip{margin-top:14px;text-align:center}
-.btn{padding:8px 16px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);cursor:pointer}
+.btn{padding:8px 16px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);cursor:pointer;
+  color:var(--ink);font-family:var(--ui);font-size:14px}
 .btn:hover{border-color:var(--ours)}
 .board{margin-top:24px;border-top:1px solid var(--line);padding-top:16px}
 .tscroll{overflow-x:auto}
-.board table{width:100%;min-width:320px;border-collapse:collapse;font-size:14px}
-.board th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--faint);font-weight:500;padding:6px 8px}
+.board table{width:100%;min-width:340px;border-collapse:collapse;font-size:14px}
+.board th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:500;padding:6px 8px}
 .board td{padding:8px;border-top:1px solid var(--line);vertical-align:middle}
 .board .rank{font-family:var(--mono);color:var(--faint);width:2em}
-.board .nm{font-weight:500}.board .nm .tag{font-family:var(--mono);font-size:9px;letter-spacing:.06em;
-  text-transform:uppercase;margin-left:6px;padding:1px 6px;border-radius:20px;background:var(--ours-soft);color:var(--ours)}
-.board .barcell{width:38%}
-.bar{height:8px;border-radius:20px;background:linear-gradient(90deg,var(--shape),var(--ours))}
+.board .nm{font-weight:500}
+.board .barcell{width:36%}
+.bar{height:8px;border-radius:20px;background:linear-gradient(90deg,var(--dist),var(--ours))}
 .board .elo{font-family:var(--mono);text-align:right}
 .board .rec{font-family:var(--mono);color:var(--muted);text-align:right;font-size:12.5px}
-
-/* method */
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .steps{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:8px}
 .step{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
@@ -130,21 +119,12 @@ input[type=range]{width:100%;accent-color:var(--ours);margin:2px 0}
 .step p{margin:0;font-size:13.5px;color:var(--muted)}
 .loop{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--sh)}
 .loop svg{width:100%;height:auto}
-.callout{background:var(--ours-soft);border:1px solid color-mix(in srgb,var(--ours) 30%,var(--line));
-  border-radius:12px;padding:16px 18px;margin-top:16px}
+.callout{background:var(--ours-soft);border:1px solid color-mix(in srgb,var(--ours) 30%,var(--line));border-radius:12px;padding:16px 18px;margin-top:16px}
 .callout b{color:var(--ours)}
 footer{border-top:1px solid var(--line);padding-block:26px 44px;color:var(--muted);font-size:13px}
 footer code{font-family:var(--mono);font-size:12px;background:var(--inset);padding:2px 6px;border-radius:5px}
-@media (max-width:820px){
-  .studio{grid-template-columns:1fr}
-  .grid2{grid-template-columns:1fr}
-}
-@media (max-width:560px){
-  .duel{grid-template-columns:1fr;gap:12px}
-  .vs{text-align:center}
-  .steps{grid-template-columns:1fr}
-  .readout{grid-template-columns:1fr 1fr}
-}
+@media (max-width:820px){.studio{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}}
+@media (max-width:560px){.duel{grid-template-columns:1fr;gap:12px}.vs{text-align:center}.steps{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 
@@ -152,19 +132,20 @@ footer code{font-family:var(--mono);font-size:12px;background:var(--inset);paddi
   <header>
     <div class="eyebrow">Autoresearch · Cartography · Pareto optimization</div>
     <h1>Pareto&nbsp;Atlas</h1>
-    <p class="thesis">Every flat world map lies — you cannot peel a sphere without stretching it. So instead of arguing over which
-      compromise is best, we let a machine <b>hill-climb its own projection</b>: 18 free parameters, tuned against shape and area
-      distortion at once. The result, <b>Equipoise</b>, carries <b>27% less total distortion than the Winkel&nbsp;Tripel</b> —
-      the projection the National Geographic Society adopted as its best compromise.</p>
+    <p class="thesis">You can't flatten a sphere without distortion, so the "best" world map is a three-way tug-of-war:
+      preserve <b style="color:var(--shape)">shapes</b>, <b style="color:var(--area)">areas</b>, or
+      <b style="color:var(--dist)">distances</b> — never all three. Instead of picking a favorite compromise, we let a
+      machine <b>hill-climb the entire trade-off surface</b>. One discovered map, <b>Vantage</b>, beats the
+      Winkel&nbsp;Tripel on <b>all three at once</b>; another sets a new record for distance fidelity.</p>
     <div class="chiprow" id="chiprow"></div>
   </header>
 
   <section id="explore">
-    <div class="eyebrow">01 — Explore the frontier</div>
-    <h2>Slide between shape and area</h2>
-    <p class="lede">Drag the slider to walk the discovered Pareto frontier, from a near-conformal map (shapes intact) to a
-      near-equal-area map (sizes honest). Or pick any classic to compare. The ellipses are Tissot's indicatrix — perfect
-      circles mean zero local distortion.</p>
+    <div class="eyebrow">01 — The trade-off triangle</div>
+    <h2>Shape · Area · Distance</h2>
+    <p class="lede">Drag inside the triangle to choose how much you care about each objective; the optimizer's best map for
+      that blend appears instantly. The corners are the pure optima. The radar compares your current map to the Winkel Tripel —
+      smaller is better on every axis.</p>
     <div class="studio">
       <div class="card mapcard">
         <div class="mapwrap"><canvas id="mainmap"></canvas></div>
@@ -184,13 +165,19 @@ footer code{font-family:var(--mono);font-size:12px;background:var(--inset);paddi
           <label for="projsel">Projection</label>
           <select id="projsel"></select>
         </div>
-        <div class="field sliderbox" id="sliderbox">
-          <div class="ends"><span class="s">◄ shape-true (conformal)</span><span class="a">area-true (equal-area) ►</span></div>
-          <input type="range" id="slider" min="0" max="1000" value="500" step="1" aria-label="Pareto position">
+        <div class="field" id="tribox">
+          <label>Priorities — drag the point</label>
+          <svg id="tri" class="tri" viewBox="0 0 300 264" role="img" aria-label="Shape-area-distance priority triangle"></svg>
+          <div class="trihint" id="trihint"></div>
         </div>
         <div class="readout">
-          <div class="metric s"><div class="k">Shape error</div><div class="v" id="mShape">–</div><div class="cmp" id="mShapeCmp"></div></div>
-          <div class="metric a"><div class="k">Area error</div><div class="v" id="mArea">–</div><div class="cmp" id="mAreaCmp"></div></div>
+          <div class="metric s"><div class="k">Shape</div><div class="v" id="mShape">–</div><div class="cmp" id="mShapeCmp"></div></div>
+          <div class="metric a"><div class="k">Area</div><div class="v" id="mArea">–</div><div class="cmp" id="mAreaCmp"></div></div>
+          <div class="metric d"><div class="k">Distance</div><div class="v" id="mDist">–</div><div class="cmp" id="mDistCmp"></div></div>
+        </div>
+        <div class="field radarbox">
+          <label>vs Winkel Tripel</label>
+          <svg id="radar" viewBox="0 0 300 210" role="img" aria-label="Three-axis distortion radar"></svg>
         </div>
         <div class="field">
           <label>Overlays</label>
@@ -198,12 +185,7 @@ footer code{font-family:var(--mono);font-size:12px;background:var(--inset);paddi
             <label class="tg"><input type="checkbox" id="tgTissot" checked>Tissot</label>
             <label class="tg"><input type="checkbox" id="tgGrat" checked>Graticule</label>
             <label class="tg"><input type="checkbox" id="tgLand" checked>Coastlines</label>
-            <label class="tg"><input type="checkbox" id="tgPop">Population</label>
           </div>
-        </div>
-        <div class="field scatterbox">
-          <label>Distortion space — ours vs. the classics</label>
-          <svg id="scatter" viewBox="0 0 320 220" role="img" aria-label="Shape vs area distortion scatter"></svg>
         </div>
       </div>
     </div>
@@ -218,8 +200,8 @@ footer code{font-family:var(--mono);font-size:12px;background:var(--inset);paddi
       <div class="mode" id="mode">connecting…</div>
     </div>
     <p class="lede">Math ranks distortion; humans rank <i>maps</i>. Pick the one you'd rather hang on a wall. Votes feed a live
-      Bradley–Terry / Elo ranking — a human preference signal that a next optimization round could fold back in as a third objective
-      (this is, quite literally, RLHF for cartography).</p>
+      Bradley–Terry / Elo ranking — the one objective the optimizer can't compute, which a future round could fold back in as a
+      fourth axis (RLHF for cartography).</p>
     <div class="duel">
       <div class="duelcard" id="duelA" tabindex="0" role="button"><div class="mapwrap"><canvas id="canA"></canvas></div><div class="nm" id="nmA"></div><div class="why" id="whyA"></div></div>
       <div class="vs">vs</div>
@@ -239,47 +221,39 @@ footer code{font-family:var(--mono);font-size:12px;background:var(--inset);paddi
     <div class="grid2">
       <div>
         <div class="steps">
-          <div class="step"><div class="n">01</div><h3>Parametrize</h3><p>A projection is written as two symmetric polynomials in longitude &amp; latitude — 18 free numbers. Equirectangular is one point in this space; no named projection sits exactly on any other.</p></div>
-          <div class="step"><div class="n">02</div><h3>Measure</h3><p>At every point we take Tissot's indicatrix — the two principal scale factors <span class="mono">a,b</span>. Shape error is <span class="mono">⟨ln(a/b)²⟩</span>; area error is the variance of <span class="mono">ln(a·b)</span>.</p></div>
-          <div class="step"><div class="n">03</div><h3>Hill-climb</h3><p>Adam gradient descent minimizes a weighted blend of the two errors, with a barrier that forbids the map from folding over itself.</p></div>
-          <div class="step"><div class="n">04</div><h3>Sweep</h3><p>Vary the blend weight and the optimum traces a whole <b>Pareto frontier</b> — a continuum of new projections, each best-in-class for its own shape/area trade.</p></div>
+          <div class="step"><div class="n">01</div><h3>Parametrize</h3><p>A projection is two symmetric polynomials in lon/lat — 18 free numbers. No named projection sits exactly on any coefficient vector.</p></div>
+          <div class="step"><div class="n">02</div><h3>Measure ×3</h3><p><b style="color:var(--shape)">Shape</b> = ⟨ln(a/b)²⟩ and <b style="color:var(--area)">area</b> = Var(ln a·b) from Tissot's indicatrix (local); <b style="color:var(--dist)">distance</b> = Var(ln of map-distance ÷ true great-circle distance) over thousands of point pairs (global).</p></div>
+          <div class="step"><div class="n">03</div><h3>Hill-climb</h3><p>Adam gradient descent minimizes a weighted blend of the three, with a barrier that forbids the map from folding.</p></div>
+          <div class="step"><div class="n">04</div><h3>Sweep the surface</h3><p>Walking the weight simplex traces the whole 3-objective Pareto surface — the triangle above is that surface, made draggable.</p></div>
         </div>
         <div class="callout" id="novelty"></div>
       </div>
       <div>
         <div class="loop">
-          <div class="eyebrow" style="margin-bottom:10px">The human-in-the-loop objective</div>
-          <svg id="loopsvg" viewBox="0 0 360 300" role="img" aria-label="RLHF loop for map projections"></svg>
-          <p style="font-size:13px;color:var(--muted);margin:12px 0 0">Distortion math gives an objective machines optimize perfectly.
-            The poll above adds the objective they can't compute — human taste — closing the loop.</p>
+          <div class="eyebrow" style="margin-bottom:10px">The three-way trade-off</div>
+          <svg id="loopsvg" viewBox="0 0 360 300" role="img" aria-label="Shape-area-distance trilemma"></svg>
+          <p style="font-size:13px;color:var(--muted);margin:12px 0 0">Each corner is a pure optimum; every real map lives inside.
+            The classics are single hand-picked points — autoresearch maps the entire interior and finds the dominant ones.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <footer class="wrap">
-    <div id="prov"></div>
-  </footer>
+  <footer class="wrap"><div id="prov"></div></footer>
 </div>
 
 <script src="appdata.js"></script>
 <script>
 (function(){
 "use strict";
-var D = window.APPDATA;
+var D=window.APPDATA;
 if(!D){document.getElementById('prov').textContent='Data failed to load.';return;}
-var PI=Math.PI, HP=PI/2, SQRT2=Math.SQRT2, SQRT3=Math.sqrt(3);
-var XT=D.xterms, YT=D.yterms;
+var PI=Math.PI,HP=PI/2,SQRT2=Math.SQRT2,SQRT3=Math.sqrt(3),XT=D.xterms,YT=D.yterms;
 
-/* ---------- projection engine ---------- */
-function familyFn(a,b){
-  return function(lat,lon){
-    var u=lon/PI, v=lat/HP, x=0,y=0,k,i,j;
-    for(k=0;k<XT.length;k++){i=XT[k][0];j=XT[k][1];x+=a[k]*Math.pow(u,2*i+1)*Math.pow(v,2*j);}
-    for(k=0;k<YT.length;k++){i=YT[k][0];j=YT[k][1];y+=b[k]*Math.pow(u,2*i)*Math.pow(v,2*j+1);}
-    return [x,y];
-  };
-}
+/* projection engine */
+function familyFn(a,b){return function(lat,lon){var u=lon/PI,v=lat/HP,x=0,y=0,k,i,j;
+  for(k=0;k<XT.length;k++){i=XT[k][0];j=XT[k][1];x+=a[k]*Math.pow(u,2*i+1)*Math.pow(v,2*j);}
+  for(k=0;k<YT.length;k++){i=YT[k][0];j=YT[k][1];y+=b[k]*Math.pow(u,2*i)*Math.pow(v,2*j+1);}return [x,y];};}
 function sinc(al){return Math.abs(al)<1e-8?1:al/Math.sin(al);}
 function clamp(x,a,b){return x<a?a:(x>b?b:x);}
 var CL={
@@ -293,342 +267,232 @@ var CL={
   "Winkel Tripel":function(la,lo){var al=Math.acos(clamp(Math.cos(la)*Math.cos(lo/2),-1,1)),f=sinc(al),p1=Math.acos(2/PI);return [0.5*(lo*Math.cos(p1)+2*Math.cos(la)*Math.sin(lo/2)*f),0.5*(la+Math.sin(la)*f)];},
   "Eckert IV":function(la,lo){var t=la/2,rhs=(2+PI/2)*Math.sin(la);for(var n=0;n<20;n++){var f=t+Math.sin(t)*Math.cos(t)+2*Math.sin(t)-rhs,fp=1+Math.cos(2*t)+2*Math.cos(t);if(Math.abs(fp)<1e-12)break;var s=f/fp;t-=s;if(Math.abs(s)<1e-12)break;}return [2/Math.sqrt(PI*(4+PI))*lo*(1+Math.cos(t)),2*Math.sqrt(PI/(4+PI))*Math.sin(t)];},
   "Equal Earth":function(la,lo){var A1=1.340264,A2=-0.081106,A3=0.000893,A4=0.003796,th=Math.asin(clamp(SQRT3/2*Math.sin(la),-1,1)),den=9*A4*Math.pow(th,8)+7*A3*Math.pow(th,6)+3*A2*th*th+A1;return [2*SQRT3*lo*Math.cos(th)/(3*den),A1*th+A2*Math.pow(th,3)+A3*Math.pow(th,7)+A4*Math.pow(th,9)];},
+  "Azimuthal Equidist.":function(la,lo){var r=HP-la;return [r*Math.sin(lo),-r*Math.cos(lo)];},
   Robinson:(function(){var X=[1,.9986,.9954,.99,.9822,.973,.96,.9427,.9216,.8962,.8679,.835,.7986,.7597,.7186,.6732,.6213,.5722,.5322],Y=[0,.062,.124,.186,.248,.31,.372,.434,.4958,.5571,.6176,.6769,.7346,.7903,.8435,.8936,.9394,.9761,1];return function(la,lo){var ad=Math.abs(la*180/PI)/5,i=Math.floor(ad),px,py;if(i>=18){px=X[18];py=Y[18];}else{var fr=ad-i;px=X[i]+fr*(X[i+1]-X[i]);py=Y[i]+fr*(Y[i+1]-Y[i]);}return [0.8487*px*lo,1.3523*py*(la>=0?1:-1)];};})()
 };
 
-/* ---------- contenders ---------- */
-function champFn(key){var c=D.champions[key];return familyFn(c.a,c.b);}
+/* champions + contenders */
+function champFn(k){var c=D.champions[k];return familyFn(c.a,c.b);}
+var NAMES={WinkelDominator:'Vantage',Triathlon:'Equipoise',Equidistant:'Wayfarer',Conformal:'Clarity',EqualArea:'Balance'};
 var C=D.champions;
 var CONTENDERS=[
-  {key:'Equipoise',   name:'Equipoise',    ours:1, why:'Balanced champion — 27% less total distortion than Winkel Tripel.', fn:champFn('Equipoise')},
-  {key:'WinkelDominator',name:'Vantage',   ours:1, why:'Beats Winkel Tripel on BOTH shape and area at once.', fn:champFn('WinkelDominator')},
-  {key:'ShapeChampion',name:'Clarity',     ours:1, why:'Near-conformal whole-world map — shapes almost untouched.', fn:champFn('ShapeChampion')},
-  {key:'Anthropocene', name:'Anthropocene',ours:1, why:'Tuned to minimize distortion where people actually live.', fn:champFn('Anthropocene')},
-  {key:'Winkel Tripel',name:'Winkel Tripel',ours:0, why:'National Geographic’s chosen compromise (1998).', fn:CL['Winkel Tripel']},
-  {key:'Robinson',     name:'Robinson',    ours:0, why:'The Rand McNally compromise; hand-tuned by eye.', fn:CL.Robinson},
-  {key:'Mollweide',    name:'Mollweide',   ours:0, why:'Equal-area ellipse, popular in science.', fn:CL.Mollweide},
-  {key:'Equal Earth',  name:'Equal Earth', ours:0, why:'Modern (2018) equal-area compromise.', fn:CL['Equal Earth']},
-  {key:'Equirectangular',name:'Equirectangular',ours:0, why:'The plainest grid; our optimizer’s starting point.', fn:CL.Equirectangular},
-  {key:'Mercator',     name:'Mercator',    ours:0, why:'Conformal but wildly area-distorting.', fn:CL.Mercator}
+  {key:'WinkelDominator',name:'Vantage',ours:1,why:'Beats the Winkel Tripel on shape, area AND distance simultaneously.',fn:champFn('WinkelDominator')},
+  {key:'Triathlon',name:'Equipoise',ours:1,why:'The most even all-rounder — minimizes its single worst axis.',fn:champFn('Triathlon')},
+  {key:'Equidistant',name:'Wayfarer',ours:1,why:'Lower distance error than any classic, even the azimuthal equidistant.',fn:champFn('Equidistant')},
+  {key:'Conformal',name:'Clarity',ours:1,why:'Near-conformal: 3° mean angular distortion for a whole world.',fn:champFn('Conformal')},
+  {key:'EqualArea',name:'Balance',ours:1,why:'Near-equal-area, but far kinder to shapes than the classics.',fn:champFn('EqualArea')},
+  {key:'Winkel Tripel',name:'Winkel Tripel',ours:0,why:'National Geographic’s chosen compromise (1998).',fn:CL['Winkel Tripel']},
+  {key:'Robinson',name:'Robinson',ours:0,why:'Rand McNally’s compromise, tuned by eye.',fn:CL.Robinson},
+  {key:'Mollweide',name:'Mollweide',ours:0,why:'Equal-area ellipse, common in science.',fn:CL.Mollweide},
+  {key:'Equal Earth',name:'Equal Earth',ours:0,why:'Modern (2018) equal-area map.',fn:CL['Equal Earth']},
+  {key:'Azimuthal Equidist.',name:'Azimuthal Equidistant',ours:0,why:'Purpose-built for distance from the center.',fn:CL['Azimuthal Equidist.']}
 ];
 var BYKEY={};CONTENDERS.forEach(function(c){BYKEY[c.key]=c;});
 
-/* ---------- geometry (lat/lon polylines) ---------- */
-function buildGeometry(){
-  var G={ocean:[],grat:[],land:[]};
-  // boundary (for ocean fill): trace the map edge
-  var b=[],s;
-  for(s=-90;s<=90;s+=2)b.push([s,-180]);
-  for(s=-180;s<=180;s+=2)b.push([90,s]);
-  for(s=90;s>=-90;s-=2)b.push([s,180]);
-  for(s=-180;s<=180;s+=2)b.push([-90,-s]); // along -90 back
-  G.ocean.push(b);
-  // graticule
+/* geometry */
+function buildGeometry(){var G={ocean:[],grat:[],land:[]},b=[],s;
+  for(s=-90;s<=90;s+=2)b.push([s,-180]);for(s=-180;s<=180;s+=2)b.push([90,s]);
+  for(s=90;s>=-90;s-=2)b.push([s,180]);for(s=-180;s<=180;s+=2)b.push([-90,-s]);G.ocean.push(b);
   for(var lo=-180;lo<=180;lo+=30){var m=[];for(var la=-90;la<=90;la+=3)m.push([la,lo]);G.grat.push(m);}
   for(var la2=-60;la2<=60;la2+=30){var p=[];for(var lo2=-180;lo2<=180;lo2+=3)p.push([la2,lo2]);G.grat.push(p);}
-  // land
-  D.land.forEach(function(ring){G.land.push(ring.map(function(pt){return [pt[1],pt[0]];}));}); // [lon,lat]->[lat,lon]
-  return G;
-}
-var GEO=buildGeometry();
-var GRAT_START=1, LAND_START=1+GEO.grat.length;
-var ALL=GEO.ocean.concat(GEO.grat,GEO.land); // ordered polylines
+  D.land.forEach(function(ring){G.land.push(ring.map(function(pt){return [pt[1],pt[0]];}));});return G;}
+var GEO=buildGeometry(),GRAT_START=1,LAND_START=1+GEO.grat.length,ALL=GEO.ocean.concat(GEO.grat,GEO.land);
 
-/* ---------- fitting ---------- */
-function fit(fn,w,h,margin){
-  var minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
+/* fit + render */
+function fit(fn,w,h,m){var minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
   for(var la=-90;la<=90;la+=3)for(var lo=-180;lo<=180;lo+=6){var xy=fn(la*PI/180,lo*PI/180);if(xy[0]<minx)minx=xy[0];if(xy[0]>maxx)maxx=xy[0];if(xy[1]<miny)miny=xy[1];if(xy[1]>maxy)maxy=xy[1];}
-  var sx=(w-2*margin)/(maxx-minx),sy=(h-2*margin)/(maxy-miny),sc=Math.min(sx,sy);
-  var ox=(w-sc*(maxx+minx))/2, oy=(h+sc*(maxy+miny))/2;
-  return {sc:sc,ox:ox,oy:oy,minx:minx,maxx:maxx,miny:miny,maxy:maxy};
-}
-function proj2screen(fn,ft,la,lo){var xy=fn(la*PI/180,lo*PI/180);return [ft.sc*xy[0]+ft.ox, -ft.sc*xy[1]+ft.oy];}
-function screenSet(fn,w,h,margin){var ft=fit(fn,w,h,margin);return ALL.map(function(poly){return poly.map(function(pt){return proj2screen(fn,ft,pt[0],pt[1]);});});}
-
-/* ---------- canvas drawing ---------- */
+  var sc=Math.min((w-2*m)/(maxx-minx),(h-2*m)/(maxy-miny));return {sc:sc,ox:(w-sc*(maxx+minx))/2,oy:(h+sc*(maxy+miny))/2};}
+function p2s(fn,ft,la,lo){var xy=fn(la*PI/180,lo*PI/180);return [ft.sc*xy[0]+ft.ox,-ft.sc*xy[1]+ft.oy];}
+function screenSet(fn,w,h,m){var ft=fit(fn,w,h,m);return ALL.map(function(poly){return poly.map(function(pt){return p2s(fn,ft,pt[0],pt[1]);});});}
 function css(v){return getComputedStyle(document.body).getPropertyValue(v).trim();}
-function setupCanvas(cv){var dpr=Math.min(2,window.devicePixelRatio||1);var r=cv.getBoundingClientRect();cv.width=Math.max(1,Math.round(r.width*dpr));cv.height=Math.max(1,Math.round(r.height*dpr));var ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return {ctx:ctx,w:r.width,h:r.height};}
+function setupCanvas(cv){var dpr=Math.min(2,window.devicePixelRatio||1),r=cv.getBoundingClientRect();cv.width=Math.max(1,Math.round(r.width*dpr));cv.height=Math.max(1,Math.round(r.height*dpr));var ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return {ctx:ctx,w:r.width,h:r.height};}
 function jump(p,q,w){return Math.abs(p[0]-q[0])>w*0.5;}
-function drawSet(ctx,sets,w,h,opts){
-  var C_ocean=css('--ocean'),C_land=css('--land'),C_ll=css('--landline'),C_line=css('--line');
-  ctx.clearRect(0,0,w,h);
-  // ocean
-  var ob=sets[0];ctx.beginPath();ob.forEach(function(pt,i){i?ctx.lineTo(pt[0],pt[1]):ctx.moveTo(pt[0],pt[1]);});ctx.closePath();ctx.fillStyle=C_ocean;ctx.fill();
-  // graticule
-  if(opts.grat){ctx.strokeStyle=C_line;ctx.lineWidth=opts.mini?0.4:0.7;ctx.globalAlpha=0.8;
+function drawSet(ctx,sets,w,h,opts){var Co=css('--ocean'),Cl=css('--land'),Cll=css('--landline'),Cli=css('--line');
+  ctx.clearRect(0,0,w,h);var ob=sets[0];ctx.beginPath();ob.forEach(function(pt,i){i?ctx.lineTo(pt[0],pt[1]):ctx.moveTo(pt[0],pt[1]);});ctx.closePath();ctx.fillStyle=Co;ctx.fill();
+  if(opts.grat){ctx.strokeStyle=Cli;ctx.lineWidth=opts.mini?0.4:0.7;ctx.globalAlpha=0.8;
     for(var g=GRAT_START;g<GRAT_START+GEO.grat.length;g++){var pl=sets[g];ctx.beginPath();for(var i=0;i<pl.length;i++){if(i&&jump(pl[i-1],pl[i],w))ctx.moveTo(pl[i][0],pl[i][1]);else i?ctx.lineTo(pl[i][0],pl[i][1]):ctx.moveTo(pl[i][0],pl[i][1]);}ctx.stroke();}ctx.globalAlpha=1;}
-  // land
-  if(opts.land){ctx.fillStyle=C_land;ctx.strokeStyle=C_ll;ctx.lineWidth=opts.mini?0.3:0.5;
-    for(var L=LAND_START;L<sets.length;L++){var rg=sets[L];if(rg.length<3)continue;ctx.beginPath();var broke=false;for(var j=0;j<rg.length;j++){if(j&&jump(rg[j-1],rg[j],w)){broke=true;break;}j?ctx.lineTo(rg[j][0],rg[j][1]):ctx.moveTo(rg[j][0],rg[j][1]);}if(!broke){ctx.closePath();ctx.fill();ctx.stroke();}}}
-}
-/* Tissot + population drawn from live proj (not morphed) */
-function drawTissot(ctx,fn,ft){
-  var C_s=css('--shape'),C_a=css('--area');
-  var pts=[],r0px=0,mags=[];
-  var lats=[-60,-30,0,30,60],lons=[-150,-90,-30,30,90,150,180];
-  var eh=1e-4;
-  lats.forEach(function(la){lons.forEach(function(lo){
-    var laR=la*PI/180,loR=lo*PI/180,co=Math.cos(laR);if(co<1e-3)return;
-    var f=fn(laR,loR);
-    var flat=fn(laR+eh,loR),flat2=fn(laR-eh,loR),flon=fn(laR,loR+eh),flon2=fn(laR,loR-eh);
-    var xla=(flat[0]-flat2[0])/(2*eh),yla=(flat[1]-flat2[1])/(2*eh);
-    var xlo=(flon[0]-flon2[0])/(2*eh)/co,ylo=(flon[1]-flon2[1])/(2*eh)/co;
-    // screen jacobian columns (uniform scale, y flipped)
-    var A=[[ft.sc*xla, ft.sc*xlo],[-ft.sc*yla, -ft.sc*ylo]];
-    var cx=ft.sc*f[0]+ft.ox, cy=-ft.sc*f[1]+ft.oy;
-    // singular values for color + magnitude
+  if(opts.land){ctx.fillStyle=Cl;ctx.strokeStyle=Cll;ctx.lineWidth=opts.mini?0.3:0.5;
+    for(var L=LAND_START;L<sets.length;L++){var rg=sets[L];if(rg.length<3)continue;ctx.beginPath();var broke=false;for(var j=0;j<rg.length;j++){if(j&&jump(rg[j-1],rg[j],w)){broke=true;break;}j?ctx.lineTo(rg[j][0],rg[j][1]):ctx.moveTo(rg[j][0],rg[j][1]);}if(!broke){ctx.closePath();ctx.fill();ctx.stroke();}}}}
+function mix(a,b,t){var A=hx(a),B=hx(b);return 'rgb('+Math.round(A[0]+(B[0]-A[0])*t)+','+Math.round(A[1]+(B[1]-A[1])*t)+','+Math.round(A[2]+(B[2]-A[2])*t)+')';}
+function hx(c){c=c.trim();if(c[0]==='#'){if(c.length===4)c='#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3];return [parseInt(c.substr(1,2),16),parseInt(c.substr(3,2),16),parseInt(c.substr(5,2),16)];}var m=c.match(/[\d.]+/g);return m?[+m[0],+m[1],+m[2]]:[128,128,128];}
+function drawTissot(ctx,fn,ft){var Cs=css('--shape'),Ca=css('--area'),pts=[],mags=[],eh=1e-4,lats=[-60,-30,0,30,60],lons=[-150,-90,-30,30,90,150,180];
+  lats.forEach(function(la){lons.forEach(function(lo){var laR=la*PI/180,loR=lo*PI/180,co=Math.cos(laR);if(co<1e-3)return;
+    var f=fn(laR,loR),fa=fn(laR+eh,loR),fb=fn(laR-eh,loR),fc=fn(laR,loR+eh),fd=fn(laR,loR-eh);
+    var xla=(fa[0]-fb[0])/(2*eh),yla=(fa[1]-fb[1])/(2*eh),xlo=(fc[0]-fd[0])/(2*eh)/co,ylo=(fc[1]-fd[1])/(2*eh)/co;
+    var A=[[ft.sc*xla,ft.sc*xlo],[-ft.sc*yla,-ft.sc*ylo]],cx=ft.sc*f[0]+ft.ox,cy=-ft.sc*f[1]+ft.oy;
     var E=A[0][0]*A[0][0]+A[1][0]*A[1][0],Gg=A[0][1]*A[0][1]+A[1][1]*A[1][1],Ff=A[0][0]*A[0][1]+A[1][0]*A[1][1];
     var disc=Math.sqrt(Math.max(0,(E-Gg)*(E-Gg)+4*Ff*Ff)),s1=Math.sqrt(Math.max(0,(E+Gg+disc)/2)),s2=Math.sqrt(Math.max(1e-9,(E+Gg-disc)/2));
-    mags.push(Math.sqrt(s1*s2));
-    pts.push({A:A,cx:cx,cy:cy,s1:s1,s2:s2});
-  });});
-  if(!pts.length)return;
-  mags.sort(function(a,b){return a-b;});var med=mags[Math.floor(mags.length/2)]||1;
-  var target=Math.min(ft.sc*0.20, 16), rscale=target/med; // pixel radius per unit
-  pts.forEach(function(p){
-    var om=2*Math.asin(clamp((p.s1-p.s2)/(p.s1+p.s2),0,1)), tt=clamp(om/(45*PI/180),0,1);
-    ctx.beginPath();
-    for(var k=0;k<=28;k++){var th=k/28*2*PI, dx=p.A[0][0]*Math.cos(th)+p.A[0][1]*Math.sin(th), dy=p.A[1][0]*Math.cos(th)+p.A[1][1]*Math.sin(th);var X=p.cx+rscale*dx, Y=p.cy+rscale*dy;k?ctx.lineTo(X,Y):ctx.moveTo(X,Y);}
-    ctx.closePath();
-    ctx.fillStyle=mix(C_s,C_a,tt); ctx.globalAlpha=0.42; ctx.fill();
-    ctx.globalAlpha=0.95; ctx.lineWidth=1; ctx.strokeStyle=mix(C_s,C_a,tt); ctx.stroke();
-    ctx.globalAlpha=1;
-  });
-}
-function drawPop(ctx,fn,ft){
-  var C_o=css('--ours');
-  D.population_centers.forEach(function(c){
-    var s=proj2screen(fn,ft,c.lat,c.lon);var r=Math.max(2.5,Math.sqrt(c.w)*7);
-    ctx.beginPath();ctx.arc(s[0],s[1],r,0,2*PI);ctx.fillStyle=C_o;ctx.globalAlpha=0.5;ctx.fill();ctx.globalAlpha=1;
-  });
-}
-function mix(a,b,t){var A=hx(a),B=hx(b);return 'rgb('+Math.round(A[0]+(B[0]-A[0])*t)+','+Math.round(A[1]+(B[1]-A[1])*t)+','+Math.round(A[2]+(B[2]-A[2])*t)+')';}
-function hx(c){c=c.trim();if(c[0]==='#'){if(c.length===4)c='#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3];return [parseInt(c.substr(1,2),16),parseInt(c.substr(3,2),16),parseInt(c.substr(5,2),16)];}var m=c.match(/\d+/g);return m?[+m[0],+m[1],+m[2]]:[128,128,128];}
+    mags.push(Math.sqrt(s1*s2));pts.push({A:A,cx:cx,cy:cy,s1:s1,s2:s2});});});
+  if(!pts.length)return;mags.sort(function(a,b){return a-b;});var med=mags[Math.floor(mags.length/2)]||1,rscale=Math.min(ft.sc*0.2,16)/med;
+  pts.forEach(function(p){var om=2*Math.asin(clamp((p.s1-p.s2)/(p.s1+p.s2),0,1)),tt=clamp(om/(45*PI/180),0,1);ctx.beginPath();
+    for(var k=0;k<=28;k++){var th=k/28*2*PI,dx=p.A[0][0]*Math.cos(th)+p.A[0][1]*Math.sin(th),dy=p.A[1][0]*Math.cos(th)+p.A[1][1]*Math.sin(th);var X=p.cx+rscale*dx,Y=p.cy+rscale*dy;k?ctx.lineTo(X,Y):ctx.moveTo(X,Y);}
+    ctx.closePath();ctx.fillStyle=mix(Cs,Ca,tt);ctx.globalAlpha=0.42;ctx.fill();ctx.globalAlpha=0.95;ctx.lineWidth=1;ctx.strokeStyle=mix(Cs,Ca,tt);ctx.stroke();ctx.globalAlpha=1;});}
 
-/* ---------- main explorer state + morph ---------- */
-var mainCv=document.getElementById('mainmap');
-var curSet=null, tgtSet=null, curFn=null, curFt=null, anim=0, mainDim=null;
-var opts={grat:true,land:true,tissot:true,pop:false};
-function frontierAt(p){ // p in [0,1] -> interpolated a,b + shape/area
-  var F=D.frontier,n=F.length,x=p*(n-1),i=Math.floor(x),fr=x-i;if(i>=n-1){i=n-2;fr=1;}if(i<0){i=0;fr=0;}
-  var a=F[i].a.map(function(v,k){return v+(F[i+1].a[k]-v)*fr;});
-  var b=F[i].b.map(function(v,k){return v+(F[i+1].b[k]-v)*fr;});
-  var shape=F[i].shape+(F[i+1].shape-F[i].shape)*fr, area=F[i].area+(F[i+1].area-F[i].area)*fr, ang=F[i].ang+(F[i+1].ang-F[i].ang)*fr;
-  return {a:a,b:b,shape:shape,area:area,ang:ang};
-}
-var current={mode:'frontier',p:0.5};
-function setTarget(fn){
-  if(!mainDim)return;
-  tgtSet=screenSet(fn,mainDim.w,mainDim.h,16);curFn=fn;curFt=fit(fn,mainDim.w,mainDim.h,16);
-  if(!curSet)curSet=tgtSet.map(function(pl){return pl.map(function(p){return p.slice();});});
-  anim=1;requestAnimationFrame(step);
-}
-function step(){
-  if(!curSet||!tgtSet){return;}
-  var done=true,ease=0.22;
-  for(var i=0;i<curSet.length;i++)for(var j=0;j<curSet[i].length;j++){
-    var dx=tgtSet[i][j][0]-curSet[i][j][0],dy=tgtSet[i][j][1]-curSet[i][j][1];
-    if(Math.abs(dx)>0.25||Math.abs(dy)>0.25)done=false;
-    curSet[i][j][0]+=dx*ease;curSet[i][j][1]+=dy*ease;
-  }
-  render(!done);
-  if(!done)requestAnimationFrame(step);else{curSet=tgtSet.map(function(pl){return pl.map(function(p){return p.slice();});});render(false);}
-}
-function render(animating){
-  var d=mainDim;drawSet(d.ctx,curSet,d.w,d.h,opts);
-  if(!animating){ if(opts.tissot&&curFn&&curFt)drawTissot(d.ctx,curFn,curFt); if(opts.pop&&curFn&&curFt)drawPop(d.ctx,curFn,curFt); }
-}
-function resizeMain(){var s=setupCanvas(mainCv);mainDim=s;curSet=null;refreshMain(true);}
-function refreshMain(instant){
-  var fn;
-  if(current.mode==='frontier'){var f=frontierAt(current.p);fn=familyFn(f.a,f.b);
-    document.getElementById('mapname').innerHTML='Equipoise frontier <span class="tag">discovered</span>';
-    document.getElementById('mapsub').textContent='blend '+Math.round(current.p*100)+'% area · '+f.ang.toFixed(1)+'° mean angular';
-    setMetrics(f.shape,f.area);
-  } else {
-    var c=BYKEY[current.mode];fn=c.fn;
+/* main explorer state */
+var mainCv=document.getElementById('mainmap'),curSet=null,tgtSet=null,curFn=null,curFt=null,anim=0,mainDim=null;
+var opts={grat:true,land:true,tissot:true};
+var current={mode:'tri',w:[1/3,1/3,1/3]};
+
+/* barycentric IDW interpolation over the surface samples */
+function interp(w){var S=D.surface,na=S[0].a.length,nb=S[0].b.length,a=new Array(na).fill(0),b=new Array(nb).fill(0),
+  sh=0,ar=0,di=0,wsum=0;
+  for(var s=0;s<S.length;s++){var d2=0;for(var t=0;t<3;t++){var dd=w[t]-S[s].w[t];d2+=dd*dd;}var wt=1/(Math.pow(d2,3)+1e-9);
+    for(var k=0;k<na;k++)a[k]+=wt*S[s].a[k];for(k=0;k<nb;k++)b[k]+=wt*S[s].b[k];sh+=wt*S[s].shape;ar+=wt*S[s].area;di+=wt*S[s].dist;wsum+=wt;}
+  for(k=0;k<na;k++)a[k]/=wsum;for(k=0;k<nb;k++)b[k]/=wsum;return {a:a,b:b,shape:sh/wsum,area:ar/wsum,dist:di/wsum};}
+
+function resizeMain(){mainDim=setupCanvas(mainCv);curSet=null;refreshMain(true);}
+function setTarget(fn){if(!mainDim)return;tgtSet=screenSet(fn,mainDim.w,mainDim.h,16);curFn=fn;curFt=fit(fn,mainDim.w,mainDim.h,16);
+  if(!curSet)curSet=tgtSet.map(function(pl){return pl.map(function(p){return p.slice();});});if(!anim){anim=1;requestAnimationFrame(step);}}
+function step(){if(!curSet||!tgtSet){anim=0;return;}var done=true;
+  for(var i=0;i<curSet.length;i++)for(var j=0;j<curSet[i].length;j++){var dx=tgtSet[i][j][0]-curSet[i][j][0],dy=tgtSet[i][j][1]-curSet[i][j][1];if(Math.abs(dx)>0.25||Math.abs(dy)>0.25)done=false;curSet[i][j][0]+=dx*0.22;curSet[i][j][1]+=dy*0.22;}
+  render(!done);if(!done)requestAnimationFrame(step);else{anim=0;curSet=tgtSet.map(function(pl){return pl.map(function(p){return p.slice();});});render(false);}}
+function render(animating){var d=mainDim;drawSet(d.ctx,curSet,d.w,d.h,opts);if(!animating&&opts.tissot&&curFn&&curFt)drawTissot(d.ctx,curFn,curFt);}
+
+function setMetrics(sh,ar,di){var W=D.winkel;
+  document.getElementById('mShape').textContent=sh.toFixed(3);
+  document.getElementById('mArea').textContent=ar.toFixed(3);
+  document.getElementById('mDist').textContent=di.toFixed(3);
+  document.getElementById('mShapeCmp').innerHTML=cmp((sh-W.shape)/W.shape*100);
+  document.getElementById('mAreaCmp').innerHTML=cmp((ar-W.area)/W.area*100);
+  document.getElementById('mDistCmp').innerHTML=cmp((di-W.dist)/W.dist*100);
+  drawRadar(sh,ar,di);}
+function cmp(p){var better=p<-0.5;var worse=p>0.5;var c=better?'var(--good)':(worse?'var(--bad)':'var(--muted)');return '<b style="color:'+c+'">'+(p<0?'−':'+')+Math.abs(p).toFixed(0)+'%</b> vs WT';}
+
+function refreshMain(instant){var fn,sh,ar,di;
+  if(current.mode==='tri'){var it=interp(current.w);fn=familyFn(it.a,it.b);sh=it.shape;ar=it.area;di=it.dist;
+    document.getElementById('mapname').innerHTML='Custom blend <span class="tag">discovered</span>';
+    document.getElementById('mapsub').textContent='shape '+Math.round(current.w[0]*100)+'% · area '+Math.round(current.w[1]*100)+'% · distance '+Math.round(current.w[2]*100)+'%';
+  } else {var c=BYKEY[current.mode];fn=c.fn;var sc=scoreOf(c.key);sh=sc.shape;ar=sc.area;di=sc.dist;
     document.getElementById('mapname').innerHTML=c.name+(c.ours?' <span class="tag">discovered</span>':'');
-    var sc=scoreOf(c.key);
-    document.getElementById('mapsub').textContent=c.ours?C[c.key].desc:'classic projection';
-    if(sc)setMetrics(sc.shape,sc.area);
-  }
+    document.getElementById('mapsub').textContent=c.ours?(C[c.key].desc||''):'classic projection';}
+  setMetrics(sh,ar,di);
   if(instant&&mainDim){curFn=fn;curFt=fit(fn,mainDim.w,mainDim.h,16);curSet=screenSet(fn,mainDim.w,mainDim.h,16);tgtSet=curSet.map(function(pl){return pl.map(function(p){return p.slice();});});render(false);}
   else setTarget(fn);
-  drawScatter();
-}
-function scoreOf(key){
-  if(C[key])return {shape:C[key].shape,area:C[key].area};
-  var cl=D.classics.filter(function(x){return x.name===key;})[0];return cl?{shape:cl.shape,area:cl.area}:null;
-}
-function setMetrics(shape,area){
-  var W=D.winkel;
-  document.getElementById('mShape').textContent=shape.toFixed(3);
-  document.getElementById('mArea').textContent=area.toFixed(3);
-  var ds=(shape-W.shape)/W.shape*100, da=(area-W.area)/W.area*100;
-  document.getElementById('mShapeCmp').innerHTML=cmp(ds)+' vs Winkel';
-  document.getElementById('mAreaCmp').innerHTML=cmp(da)+' vs Winkel';
-}
-function cmp(pct){var better=pct<0;return '<b style="color:'+(better?'var(--good)':'var(--bad)')+'">'+(better?'−':'+')+Math.abs(pct).toFixed(0)+'%</b>';}
+  drawTri();}
+function scoreOf(key){if(C[key])return {shape:C[key].shape,area:C[key].area,dist:C[key].dist};var cl=D.classics.filter(function(x){return x.name===key;})[0];return cl?{shape:cl.shape,area:cl.area,dist:cl.dist}:{shape:0,area:0,dist:0};}
 
-/* ---------- scatter ---------- */
-function drawScatter(){
-  var svg=document.getElementById('scatter'),W=320,H=220,ml=42,mb=30,mt=10,mr=10;
-  var xmax=1.1,ymax=0.75;
-  function X(v){return ml+(v/xmax)*(W-ml-mr);}
-  function Y(v){return H-mb-(v/ymax)*(H-mb-mt);}
-  var cs=css('--shape'),ca=css('--area'),co=css('--ours'),cl=css('--line'),cm=css('--muted'),cf=css('--faint');
+/* ternary triangle: heatmap + draggable handle */
+var TRI=document.getElementById('tri'),Sc={x:150,y:20},Ac={x:32,y:236},Dc={x:268,y:236};
+function bary2xy(w){return {x:w[0]*Sc.x+w[1]*Ac.x+w[2]*Dc.x,y:w[0]*Sc.y+w[1]*Ac.y+w[2]*Dc.y};}
+function xy2bary(px,py){var det=(Ac.y-Dc.y)*(Sc.x-Dc.x)+(Dc.x-Ac.x)*(Sc.y-Dc.y);
+  var w0=((Ac.y-Dc.y)*(px-Dc.x)+(Dc.x-Ac.x)*(py-Dc.y))/det;
+  var w1=((Dc.y-Sc.y)*(px-Dc.x)+(Sc.x-Dc.x)*(py-Dc.y))/det;var w2=1-w0-w1;
+  w0=Math.max(0,w0);w1=Math.max(0,w1);w2=Math.max(0,w2);var s=w0+w1+w2||1;return [w0/s,w1/s,w2/s];}
+function drawTri(){var Cg=css('--good'),Cf=css('--faint'),Cl=css('--line'),Ci=css('--ink'),Cs=css('--shape'),Ca=css('--area'),Cd=css('--dist');
+  var norms=D.surface.map(function(p){return p.norm;}),nmin=Math.min.apply(null,norms),nmax=Math.max.apply(null,norms);
+  var s='',N=14;
+  function cellColor(w){var it=0,wsum=0;for(var q=0;q<D.surface.length;q++){var d2=0;for(var t=0;t<3;t++){var dd=w[t]-D.surface[q].w[t];d2+=dd*dd;}var wt=1/(Math.pow(d2,3)+1e-9);it+=wt*D.surface[q].norm;wsum+=wt;}var nv=it/wsum;var tt=clamp((nv-nmin)/(nmax-nmin),0,1);return mix(Cg,Cf,tt);}
+  function pt(i,j){var w=[(N-i-j)/N,i/N,j/N];var c=bary2xy(w);return c.x+','+c.y;}
+  for(var i=0;i<N;i++)for(var j=0;j<N-i;j++){
+    var wc=[(N-i-j-0.667)/N,(i+0.333)/N,(j+0.333)/N];
+    s+='<polygon points="'+pt(i,j)+' '+pt(i+1,j)+' '+pt(i,j+1)+'" fill="'+cellColor(wc)+'" stroke="none"/>';
+    if(i+j<N-1){var wc2=[(N-i-j-1.333)/N,(i+0.667)/N,(j+0.667)/N];s+='<polygon points="'+pt(i+1,j)+' '+pt(i,j+1)+' '+pt(i+1,j+1)+'" fill="'+cellColor(wc2)+'" stroke="none"/>';}
+  }
+  s+='<polygon points="'+Sc.x+','+Sc.y+' '+Ac.x+','+Ac.y+' '+Dc.x+','+Dc.y+'" fill="none" stroke="'+Cl+'" stroke-width="1.5"/>';
+  s+='<text x="'+Sc.x+'" y="'+(Sc.y-6)+'" fill="'+Cs+'" font-size="12" font-weight="600" text-anchor="middle" font-family="IBM Plex Sans,sans-serif">SHAPE</text>';
+  s+='<text x="'+(Ac.x-2)+'" y="'+(Ac.y+16)+'" fill="'+Ca+'" font-size="12" font-weight="600" text-anchor="start" font-family="IBM Plex Sans,sans-serif">AREA</text>';
+  s+='<text x="'+(Dc.x+2)+'" y="'+(Dc.y+16)+'" fill="'+Cd+'" font-size="12" font-weight="600" text-anchor="end" font-family="IBM Plex Sans,sans-serif">DISTANCE</text>';
+  // markers for the named champion corners
+  if(current.mode==='tri'){var h=bary2xy(current.w);s+='<circle cx="'+h.x+'" cy="'+h.y+'" r="7" fill="'+css('--ours')+'" stroke="#fff" stroke-width="2"/>';}
+  TRI.innerHTML=s;
+  document.getElementById('trihint').textContent='greener = lower total distortion · corners = pure optima';}
+
+function triPoint(e){var r=TRI.getBoundingClientRect(),cx=(e.touches?e.touches[0].clientX:e.clientX),cy=(e.touches?e.touches[0].clientY:e.clientY);
+  var px=(cx-r.left)/r.width*300,py=(cy-r.top)/r.height*264;current.w=xy2bary(px,py);current.mode='tri';document.getElementById('projsel').value='tri';refreshMain(false);}
+var dragging=false;
+TRI.addEventListener('pointerdown',function(e){dragging=true;TRI.setPointerCapture(e.pointerId);triPoint(e);});
+TRI.addEventListener('pointermove',function(e){if(dragging)triPoint(e);});
+TRI.addEventListener('pointerup',function(){dragging=false;});
+TRI.addEventListener('pointercancel',function(){dragging=false;});
+
+/* radar (shape/area/dist vs winkel) */
+function drawRadar(sh,ar,di){var R=document.getElementById('radar'),W=D.winkel,ref=D.refs,cx=150,cy=104,rad=74;
+  var Cl=css('--line'),Cf=css('--faint'),Co=css('--ours'),Cm=css('--muted'),Cs=css('--shape'),Ca=css('--area'),Cd=css('--dist');
+  var ang=[-90,30,150].map(function(d){return d*PI/180;});
+  var CAP=1.6; // normalized-to-equirect cap
+  function pt(vals,i){var v=clamp(vals[i]/CAP,0,1.08);return [cx+Math.cos(ang[i])*rad*v,cy+Math.sin(ang[i])*rad*v];}
+  var cur=[sh/ref.shape,ar/ref.area,di/ref.dist],wk=[W.shape/ref.shape,W.area/ref.area,W.dist/ref.dist];
   var s='';
-  s+='<rect x="'+ml+'" y="'+mt+'" width="'+(W-ml-mr)+'" height="'+(H-mb-mt)+'" fill="none" stroke="'+cl+'"/>';
-  var gx=[0,0.25,0.5,0.75,1],gy=[0,0.25,0.5,0.75];
-  gx.forEach(function(v){s+='<line x1="'+X(v)+'" y1="'+mt+'" x2="'+X(v)+'" y2="'+(H-mb)+'" stroke="'+cl+'" stroke-opacity="0.4"/>';s+='<text x="'+X(v)+'" y="'+(H-mb+14)+'" fill="'+cf+'" font-size="9" font-family="monospace" text-anchor="middle">'+v.toFixed(2)+'</text>';});
-  gy.forEach(function(v){s+='<line x1="'+ml+'" y1="'+Y(v)+'" x2="'+(W-mr)+'" y2="'+Y(v)+'" stroke="'+cl+'" stroke-opacity="0.4"/>';s+='<text x="'+(ml-5)+'" y="'+(Y(v)+3)+'" fill="'+cf+'" font-size="9" font-family="monospace" text-anchor="end">'+v.toFixed(2)+'</text>';});
-  s+='<text x="'+((W+ml)/2)+'" y="'+(H-3)+'" fill="'+cm+'" font-size="10" text-anchor="middle">shape error →</text>';
-  s+='<text x="12" y="'+((H-mb+mt)/2)+'" fill="'+cm+'" font-size="10" text-anchor="middle" transform="rotate(-90 12 '+((H-mb+mt)/2)+')">area error →</text>';
-  // classics
-  D.classics.forEach(function(c){if(c.shape>xmax||c.area>ymax)return;var big=(c.name==='Winkel Tripel');s+='<circle cx="'+X(c.shape)+'" cy="'+Y(c.area)+'" r="'+(big?4:2.6)+'" fill="'+(big?cs:cm)+'" fill-opacity="'+(big?1:0.55)+'"/>';if(big)s+='<text x="'+(X(c.shape)+6)+'" y="'+(Y(c.area)+3)+'" fill="'+cs+'" font-size="9">Winkel</text>';});
-  // our frontier line
-  var pts=D.frontier.map(function(f){return X(f.shape)+','+Y(f.area);}).join(' ');
-  s+='<polyline points="'+pts+'" fill="none" stroke="'+co+'" stroke-width="1.8"/>';
-  D.frontier.forEach(function(f){s+='<circle cx="'+X(f.shape)+'" cy="'+Y(f.area)+'" r="2" fill="'+co+'"/>';});
-  // current marker
-  var cur=(current.mode==='frontier')?frontierAt(current.p):scoreOf(current.mode);
-  if(cur&&cur.shape<=xmax&&cur.area<=ymax)s+='<circle cx="'+X(cur.shape)+'" cy="'+Y(cur.area)+'" r="5.5" fill="none" stroke="'+co+'" stroke-width="2"/><circle cx="'+X(cur.shape)+'" cy="'+Y(cur.area)+'" r="2" fill="'+co+'"/>';
-  svg.innerHTML=s;
-}
+  [0.25,0.5,0.75,1].forEach(function(g){var pp=ang.map(function(a){return (cx+Math.cos(a)*rad*g)+','+(cy+Math.sin(a)*rad*g);}).join(' ');s+='<polygon points="'+pp+'" fill="none" stroke="'+Cl+'" stroke-opacity="0.6"/>';});
+  ang.forEach(function(a){s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+Math.cos(a)*rad)+'" y2="'+(cy+Math.sin(a)*rad)+'" stroke="'+Cl+'"/>';});
+  function poly(vals,stroke,fill){var pp=vals.map(function(_,i){return pt(vals,i).join(',');}).join(' ');return '<polygon points="'+pp+'" fill="'+fill+'" fill-opacity="0.16" stroke="'+stroke+'" stroke-width="2"/>';}
+  s+=poly(wk,Cm,Cm);s+=poly(cur,Co,Co);
+  var labs=[['Shape',Cs],['Area',Ca],['Distance',Cd]];
+  labs.forEach(function(l,i){var lx=cx+Math.cos(ang[i])*(rad+18),ly=cy+Math.sin(ang[i])*(rad+16);s+='<text x="'+lx+'" y="'+ly+'" fill="'+l[1]+'" font-size="10.5" font-weight="600" text-anchor="middle">'+l[0]+'</text>';});
+  s+='<text x="'+cx+'" y="'+(cy+rad+34)+'" text-anchor="middle" font-size="10.5"><tspan fill="'+Co+'">■ current</tspan>  <tspan fill="'+Cm+'">■ Winkel Tripel</tspan></text>';
+  R.innerHTML=s;}
 
-/* ---------- controls ---------- */
+/* dropdown */
 var sel=document.getElementById('projsel');
-var og1=document.createElement('optgroup');og1.label='Discovered frontier';
-var of=document.createElement('option');of.value='frontier';of.textContent='◆ Equipoise frontier (drag slider)';og1.appendChild(of);
-['Equipoise','WinkelDominator','ShapeChampion','Anthropocene'].forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=BYKEY[k].name+' — '+(k==='WinkelDominator'?'Vantage':k==='ShapeChampion'?'Clarity':k)+'';o.textContent='◆ '+BYKEY[k].name;og1.appendChild(o);});
-sel.appendChild(og1);
+var og0=document.createElement('optgroup');og0.label='Explore';
+var oT=document.createElement('option');oT.value='tri';oT.textContent='◆ Trade-off triangle (drag)';og0.appendChild(oT);sel.appendChild(og0);
+var og1=document.createElement('optgroup');og1.label='Discovered champions';
+['WinkelDominator','Triathlon','Equidistant','Conformal','EqualArea'].forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent='◆ '+NAMES[k];og1.appendChild(o);});sel.appendChild(og1);
 var og2=document.createElement('optgroup');og2.label='Classic projections';
-D.classics.forEach(function(c){if(!BYKEY[c.name]&&['Aitoff'].indexOf(c.name)<0){}var o=document.createElement('option');o.value='cl:'+c.name;o.textContent=c.name;og2.appendChild(o);});
-sel.appendChild(og2);
-sel.value='frontier';
-sel.addEventListener('change',function(){
-  var v=sel.value;
-  if(v==='frontier'){current.mode='frontier';document.getElementById('sliderbox').style.opacity=1;document.getElementById('slider').disabled=false;}
-  else{document.getElementById('sliderbox').style.opacity=0.4;document.getElementById('slider').disabled=true;current.mode=v.indexOf('cl:')===0?v.slice(3):v;}
-  refreshMain(false);
-});
-document.getElementById('slider').addEventListener('input',function(e){current.mode='frontier';current.p=(+e.target.value)/1000;var f=frontierAt(current.p);curFn=familyFn(f.a,f.b);
-  document.getElementById('mapsub').textContent='blend '+Math.round(current.p*100)+'% area · '+f.ang.toFixed(1)+'° mean angular';
-  setMetrics(f.shape,f.area);
-  // live morph
-  if(mainDim){tgtSet=screenSet(curFn,mainDim.w,mainDim.h,16);curFt=fit(curFn,mainDim.w,mainDim.h,16);if(!anim){anim=1;requestAnimationFrame(step);}}
-  drawScatter();
-});
-function bindTg(id,key){document.getElementById(id).addEventListener('change',function(e){opts[key]=e.target.checked;render(false);});}
-bindTg('tgTissot','tissot');bindTg('tgGrat','grat');bindTg('tgLand','land');bindTg('tgPop','pop');
-document.getElementById('tissotnote').innerHTML='Tissot ellipses show local distortion';
+D.classics.forEach(function(c){var o=document.createElement('option');o.value='cl:'+c.name;o.textContent=c.name;og2.appendChild(o);});sel.appendChild(og2);
+sel.value='tri';
+sel.addEventListener('change',function(){var v=sel.value;document.getElementById('tribox').style.opacity=(v==='tri')?1:0.45;
+  if(v==='tri')current.mode='tri';else current.mode=v.indexOf('cl:')===0?v.slice(3):v;refreshMain(false);});
+function bindTg(id,k){document.getElementById(id).addEventListener('change',function(e){opts[k]=e.target.checked;render(false);});}
+bindTg('tgTissot','tissot');bindTg('tgGrat','grat');bindTg('tgLand','land');
+document.getElementById('tissotnote').innerHTML='Tissot ellipses = local distortion';
 
-/* ---------- header chips + novelty + provenance ---------- */
-(function(){
-  var W=D.winkel,E=C.Equipoise,V=C.WinkelDominator;
+/* chips + novelty + provenance */
+(function(){var W=D.winkel,V=C.WinkelDominator,E=C.Equidistant,K=C.Conformal;
+  var az=D.classics.filter(function(c){return c.name==='Azimuthal Equidist.';})[0];
   var rows=[
-    {k:'Equipoise total error',v:E.combined.toFixed(3),d:'vs Winkel '+W.combined.toFixed(3),win:1},
-    {k:'Improvement',v:Math.round((1-E.combined/W.combined)*100)+'%',d:'less distortion than Winkel Tripel',win:1},
-    {k:'Vantage',v:V.ang.toFixed(1)+'°',d:'beats Winkel on shape AND area',win:1},
-    {k:'Search space',v:D.meta.nparams+' params',d:'hill-climbed, '+D.meta.report_grid_points.toLocaleString()+'-pt grid',win:0}
+    {k:'Vantage vs Winkel',v:'wins ×3',d:'lower shape, area & distance',win:1},
+    {k:'Total distortion',v:'−'+Math.round((1-V.norm/W.norm)*100)+'%',d:'Vantage vs Winkel Tripel',win:1},
+    {k:'Wayfarer distance',v:E.dist.toFixed(3),d:'beats azimuthal equidist. '+az.dist.toFixed(3),win:1},
+    {k:'Clarity angles',v:K.ang.toFixed(1)+'°',d:'near-conformal whole world',win:1}
   ];
   document.getElementById('chiprow').innerHTML=rows.map(function(r){return '<div class="chip'+(r.win?' win':'')+'"><span class="k">'+r.k+'</span><span class="v">'+r.v+'</span><span class="d">'+r.d+'</span></div>';}).join('');
-  var nv=D.novelty.Equipoise;
-  document.getElementById('novelty').innerHTML='<b>Genuinely new, not a rehash.</b> Even after the best possible rescaling, Equipoise still differs from its nearest classic ('+nv.nearest_classic+') by <b class="mono">'+nv.residual_pct+'%</b> of the map’s size, and the near-conformal member by '+D.novelty.ShapeChampion.residual_pct+'%. These coordinates sit on no historical projection.';
-  document.getElementById('prov').innerHTML='<b>Pareto Atlas.</b> Projections discovered by pure-Python gradient descent over an '+D.meta.nparams+'-parameter symmetric polynomial family, scored on a '+D.meta.report_grid_points.toLocaleString()+'-point grid via Tissot’s indicatrix — validated against equal-area and conformal classics (both score exactly 0 on their defining metric). Coastlines: <code>Natural Earth 110m</code>. Metric: shape <code>⟨ln(a/b)²⟩</code> + area <code>Var(ln a·b)</code>. No third-party libraries; fully reproducible from source.';
-})();
+  var nv=D.novelty.Triathlon||D.novelty.Equipoise;
+  document.getElementById('novelty').innerHTML='<b>New, not a rehash.</b> Even after the best possible rescaling, the all-rounder still differs from its nearest classic ('+nv.nearest_classic+') by <b class="mono">'+nv.residual_pct+'%</b>, and the distance champion from the azimuthal equidistant by '+(D.novelty.Equidistant.residual_pct)+'%. These coordinates sit on no historical projection.';
+  document.getElementById('prov').innerHTML='<b>Pareto Atlas.</b> Projections discovered by pure-Python gradient descent over an '+D.meta.nparams+'-parameter symmetric polynomial family. Three objectives — shape & area from Tissot’s indicatrix on a '+D.meta.report_grid_points.toLocaleString()+'-point grid, distance from '+D.meta.report_pairs.toLocaleString()+' point-pair great-circle comparisons. Validated: equal-area classics score area 0, Mercator scores shape 0. Coastlines: <code>Natural Earth 110m</code>. No third-party libraries.';})();
 
-/* ---------- RLHF loop diagram ---------- */
-(function(){
-  var co=css('--ours'),cs=css('--shape'),ca=css('--area'),ci=css('--ink'),cm=css('--muted'),cl=css('--line'),csf=css('--surface-2');
-  function box(x,y,w,h,fill,txt,sub,tc){return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="10" fill="'+fill+'" stroke="'+cl+'"/><text x="'+(x+w/2)+'" y="'+(y+(sub?h/2-2:h/2+4))+'" fill="'+(tc||ci)+'" font-size="13" font-weight="600" text-anchor="middle" font-family="Fraunces,serif">'+txt+'</text>'+(sub?'<text x="'+(x+w/2)+'" y="'+(y+h/2+14)+'" fill="'+cm+'" font-size="9.5" text-anchor="middle">'+sub+'</text>':'');}
-  function arr(x1,y1,x2,y2,c){return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+c+'" stroke-width="2" marker-end="url(#ah)"/>';}
-  var s='<defs><marker id="ah" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="'+cm+'"/></marker></defs>';
-  s+=box(110,10,140,46,csf,'Projection family','18 parameters');
-  s+=arr(180,56,180,86,cm);
-  s+=box(90,86,180,46,csf,'Hill-climb optimizer','Adam · Pareto sweep');
-  s+=arr(90,109,40,109,cm)+arr(40,109,40,180,cm)+arr(40,180,90,180,cm);
-  s+=box(90,158,180,46,'none','Candidate maps','',ci).replace('fill="none"','fill="'+csf+'"');
-  s+=arr(270,181,300,181,cm)+arr(300,181,300,250,cm);
-  s+=box(200,232,150,46,cs,'Distortion metric','shape + area',ci);
-  s+=box(20,232,150,46,co,'Human votes','the poll ↑','#fff');
-  s+=arr(170,255,175,255,cm);
-  s+=arr(95,232,120,150,co);
-  s+='<text x="180" y="295" fill="'+cm+'" font-size="10" text-anchor="middle" font-style="italic">both objectives feed the next round</text>';
-  document.getElementById('loopsvg').innerHTML=s;
-})();
+/* trilemma diagram */
+(function(){var Cs=css('--shape'),Ca=css('--area'),Cd=css('--dist'),Ci=css('--ink'),Cm=css('--muted'),Cl=css('--line'),Co=css('--ours');
+  var Sx=180,Sy=40,Ax=44,Ay=250,Dx=316,Dy=250;
+  var s='<polygon points="'+Sx+','+Sy+' '+Ax+','+Ay+' '+Dx+','+Dy+'" fill="none" stroke="'+Cl+'" stroke-width="1.5"/>';
+  function corner(x,y,c,t,sub){return '<circle cx="'+x+'" cy="'+y+'" r="6" fill="'+c+'"/><text x="'+x+'" y="'+(y<100?y-12:y+20)+'" fill="'+c+'" font-size="14" font-weight="700" text-anchor="middle" font-family="Fraunces,serif">'+t+'</text><text x="'+x+'" y="'+(y<100?y+2:y+34)+'" fill="'+Cm+'" font-size="10" text-anchor="middle">'+sub+'</text>';}
+  s+=corner(Sx,Sy,Cs,'Shape','conformal');s+=corner(Ax,Ay,Ca,'Area','equal-area');s+=corner(Dx,Dy,Cd,'Distance','equidistant');
+  // classics + our champs as points
+  function P(w){return [w[0]*Sx+w[1]*Ax+w[2]*Dx,w[0]*Sy+w[1]*Ay+w[2]*Dy];}
+  // approximate placement by normalized inverse errors is complex; place champions at their solve weights
+  var wpts=[['WinkelDominator',null]];
+  // place surface samples faintly
+  D.surface.forEach(function(p){var xy=P(p.w);s+='<circle cx="'+xy[0]+'" cy="'+xy[1]+'" r="2.4" fill="'+Co+'" fill-opacity="0.5"/>';});
+  s+='<text x="180" y="150" fill="'+Cm+'" font-size="11" text-anchor="middle" font-style="italic">• = a discovered</text><text x="180" y="164" fill="'+Cm+'" font-size="11" text-anchor="middle" font-style="italic">optimal map</text>';
+  document.getElementById('loopsvg').innerHTML=s;})();
 
-/* ---------- POLL: db-backed with localStorage fallback ---------- */
-var poll=(function(){
-  var votes=[]; // {w,l,t}
-  var store=null, unsub=null, mode='local';
-  var listeners=[];
+/* POLL */
+var poll=(function(){var votes=[],store=null,mode='local',listeners=[];
   function emit(){listeners.forEach(function(f){f(votes.slice());});}
   function onChange(f){listeners.push(f);f(votes.slice());}
-  function localLoad(){try{votes=JSON.parse(localStorage.getItem('pa_votes')||'[]');}catch(e){votes=[];}}
-  function localSave(){try{localStorage.setItem('pa_votes',JSON.stringify(votes.slice(-500)));}catch(e){}}
-  function add(w,l){
-    var v={w:w,l:l,t:Date.now()};
-    if(mode==='live'&&store){ votes.push(v); emit();
-      store.add({w:w,l:l,t:v.t}).catch(function(err){ /* keep optimistic */ });
-    } else { votes.push(v); localSave(); emit(); }
-  }
-  function initDb(){
-    if(!(window.claude&&window.claude.use))return finishLocal();
-    var to=setTimeout(finishLocal,10500);
-    window.claude.use('db').then(function(db){
-      clearTimeout(to);
-      if(!db)return finishLocal();
-      store=db.collection('votes');mode='live';
-      setMode(true);
-      unsub=store.orderBy('t','desc').limit(500).onSnapshot(function(snap){
-        var arr=[];snap.docs.forEach(function(d){var x=d.data();if(x&&x.w&&x.l)arr.push({w:x.w,l:x.l,t:x.t||0});});
-        arr.sort(function(a,b){return a.t-b.t;});votes=arr;emit();
-      },function(err){ /* dead listener -> stay with last data */ });
-    },function(){clearTimeout(to);finishLocal();});
-  }
+  function localLoad(){try{votes=JSON.parse(localStorage.getItem('pa3_votes')||'[]');}catch(e){votes=[];}}
+  function localSave(){try{localStorage.setItem('pa3_votes',JSON.stringify(votes.slice(-500)));}catch(e){}}
+  function add(w,l){var v={w:w,l:l,t:Date.now()};if(mode==='live'&&store){votes.push(v);emit();store.add({w:w,l:l,t:v.t}).catch(function(){});}else{votes.push(v);localSave();emit();}}
+  function setMode(live){var m=document.getElementById('mode');if(live){m.textContent='● live · shared poll';m.className='mode live';}else{m.textContent='◦ local · saved in your browser';m.className='mode';}document.getElementById('boardhead').textContent=live?'Live leaderboard — everyone’s votes':'Your leaderboard (this browser)';}
   function finishLocal(){mode='local';localLoad();setMode(false);emit();}
-  function setMode(live){var m=document.getElementById('mode');if(live){m.textContent='● live · shared poll';m.className='mode live';}else{m.textContent='◦ local · votes saved in your browser';m.className='mode';}
-    document.getElementById('boardhead').textContent=live?'Live leaderboard — everyone’s votes':'Your leaderboard (this browser)';}
-  return {add:add,onChange:onChange,init:initDb,getMode:function(){return mode;}};
-})();
-
-/* Elo from vote log */
-function rankings(votes){
-  var R={},G={},Wn={},Ls={};CONTENDERS.forEach(function(c){R[c.key]=1000;G[c.key]=0;Wn[c.key]=0;Ls[c.key]=0;});
-  votes.forEach(function(v){if(!(v.w in R)||!(v.l in R))return;
-    var ew=1/(1+Math.pow(10,(R[v.l]-R[v.w])/400));var K=24;
-    R[v.w]+=K*(1-ew);R[v.l]+=K*(0-(1-ew));
-    G[v.w]++;G[v.l]++;Wn[v.w]++;Ls[v.l]++;
-  });
-  return CONTENDERS.map(function(c){return {key:c.key,name:c.name,ours:c.ours,elo:R[c.key],g:G[c.key],w:Wn[c.key],l:Ls[c.key]};})
-    .sort(function(a,b){return b.elo-a.elo;});
-}
-function renderBoard(votes){
-  var rk=rankings(votes),body=document.getElementById('boardbody');
-  var maxE=Math.max.apply(null,rk.map(function(r){return r.elo;})),minE=Math.min.apply(null,rk.map(function(r){return r.elo;}));
-  var rng=Math.max(1,maxE-minE);
-  body.innerHTML=rk.map(function(r,i){
-    var pct=Math.round((r.elo-minE)/rng*100);
-    return '<tr><td class="rank">'+(i+1)+'</td><td class="nm">'+r.name+(r.ours?' <span class="tag">AI</span>':'')+'</td>'+
-      '<td class="barcell"><div class="bar" style="width:'+Math.max(6,pct)+'%"></div></td>'+
-      '<td class="elo">'+Math.round(r.elo)+'</td><td class="rec">'+r.w+'–'+r.l+'</td></tr>';
-  }).join('');
-}
-
-/* duel */
-var duelCanA=document.getElementById('canA'),duelCanB=document.getElementById('canB'),pair=[null,null];
-function drawMini(cv,fn){var s=setupCanvas(cv);var set=screenSet(fn,s.w,s.h,8);drawSet(s.ctx,set,s.w,s.h,{grat:true,land:true,mini:true});}
-function newPair(){
-  var idx=CONTENDERS.map(function(_,i){return i;});
-  for(var i=idx.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=idx[i];idx[i]=idx[j];idx[j]=t;}
+  function init(){if(!(window.claude&&window.claude.use))return finishLocal();var to=setTimeout(finishLocal,10500);
+    window.claude.use('db').then(function(db){clearTimeout(to);if(!db)return finishLocal();store=db.collection('votes');mode='live';setMode(true);
+      store.orderBy('t','desc').limit(500).onSnapshot(function(snap){var arr=[];snap.docs.forEach(function(d){var x=d.data();if(x&&x.w&&x.l)arr.push({w:x.w,l:x.l,t:x.t||0});});arr.sort(function(a,b){return a.t-b.t;});votes=arr;emit();},function(){});},function(){clearTimeout(to);finishLocal();});}
+  return {add:add,onChange:onChange,init:init};})();
+function rankings(votes){var R={},Wn={},Ls={};CONTENDERS.forEach(function(c){R[c.key]=1000;Wn[c.key]=0;Ls[c.key]=0;});
+  votes.forEach(function(v){if(!(v.w in R)||!(v.l in R))return;var ew=1/(1+Math.pow(10,(R[v.l]-R[v.w])/400)),K=24;R[v.w]+=K*(1-ew);R[v.l]-=K*(1-ew);Wn[v.w]++;Ls[v.l]++;});
+  return CONTENDERS.map(function(c){return {key:c.key,name:c.name,ours:c.ours,elo:R[c.key],w:Wn[c.key],l:Ls[c.key]};}).sort(function(a,b){return b.elo-a.elo;});}
+function renderBoard(votes){var rk=rankings(votes),body=document.getElementById('boardbody'),
+  maxE=Math.max.apply(null,rk.map(function(r){return r.elo;})),minE=Math.min.apply(null,rk.map(function(r){return r.elo;})),rng=Math.max(1,maxE-minE);
+  body.innerHTML=rk.map(function(r,i){var pct=Math.round((r.elo-minE)/rng*100);
+    return '<tr><td class="rank">'+(i+1)+'</td><td class="nm">'+r.name+(r.ours?' <span class="tag2">AI</span>':'')+'</td><td class="barcell"><div class="bar" style="width:'+Math.max(6,pct)+'%"></div></td><td class="elo">'+Math.round(r.elo)+'</td><td class="rec">'+r.w+'–'+r.l+'</td></tr>';}).join('');}
+var pair=[null,null];
+function drawMini(cv,fn){var s=setupCanvas(cv),set=screenSet(fn,s.w,s.h,8);drawSet(s.ctx,set,s.w,s.h,{grat:true,land:true,mini:true});}
+function newPair(){var idx=CONTENDERS.map(function(_,i){return i;});for(var i=idx.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=idx[i];idx[i]=idx[j];idx[j]=t;}
   var a=CONTENDERS[idx[0]],b=CONTENDERS[idx[1]];pair=[a,b];
-  document.getElementById('nmA').innerHTML=a.name+(a.ours?' <span class="tag" style="font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:20px;background:var(--ours-soft);color:var(--ours)">AI</span>':'');
-  document.getElementById('nmB').innerHTML=b.name+(b.ours?' <span class="tag" style="font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:20px;background:var(--ours-soft);color:var(--ours)">AI</span>':'');
-  document.getElementById('whyA').textContent=a.why;document.getElementById('whyB').textContent=b.why;
-  drawMini(duelCanA,a.fn);drawMini(duelCanB,b.fn);
-}
-function vote(winIdx){if(!pair[0])return;var w=pair[winIdx],l=pair[1-winIdx];poll.add(w.key,l.key);newPair();}
+  document.getElementById('nmA').innerHTML=a.name+(a.ours?' <span class="tag2">AI</span>':'');document.getElementById('nmB').innerHTML=b.name+(b.ours?' <span class="tag2">AI</span>':'');
+  document.getElementById('whyA').textContent=a.why;document.getElementById('whyB').textContent=b.why;drawMini(document.getElementById('canA'),a.fn);drawMini(document.getElementById('canB'),b.fn);}
+function vote(i){if(!pair[0])return;poll.add(pair[i].key,pair[1-i].key);newPair();}
 document.getElementById('duelA').addEventListener('click',function(){vote(0);});
 document.getElementById('duelB').addEventListener('click',function(){vote(1);});
 document.getElementById('duelA').addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();vote(0);}});
@@ -636,9 +500,8 @@ document.getElementById('duelB').addEventListener('keydown',function(e){if(e.key
 document.getElementById('skipBtn').addEventListener('click',newPair);
 poll.onChange(renderBoard);
 
-/* ---------- boot ---------- */
 function boot(){resizeMain();newPair();poll.init();}
-var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){resizeMain();if(pair[0]){drawMini(duelCanA,pair[0].fn);drawMini(duelCanB,pair[1].fn);}},180);});
-if(document.readyState==='complete'||document.readyState==='interactive')setTimeout(boot,0);else document.addEventListener('DOMContentLoaded',boot);
+var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){resizeMain();if(pair[0]){drawMini(document.getElementById('canA'),pair[0].fn);drawMini(document.getElementById('canB'),pair[1].fn);}},180);});
+if(document.readyState!=='loading')setTimeout(boot,0);else document.addEventListener('DOMContentLoaded',boot);
 })();
 </script>

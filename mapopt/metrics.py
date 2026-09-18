@@ -28,6 +28,7 @@ numbers are the axes of the Pareto frontier.
 from __future__ import annotations
 
 import math
+import random
 from typing import Callable, Dict, List, Sequence, Tuple
 
 Proj = Callable[[float, float], Tuple[float, float]]
@@ -149,3 +150,92 @@ def generic_scores(proj: Proj, grid, weights=None, h: float = 1e-5) -> Dict[str,
         ylat.append(c)
         ylon.append(d)
     return scores_from_partials(xlat, xlon, ylat, ylon, grid.cos, weights)
+
+
+# ---------------------------------------------------------------------------
+# The THIRD axis: distance error (global, not local)
+# ---------------------------------------------------------------------------
+# Shape and area are *local* (differential) properties. Distance is *global*:
+# does the straight-line distance between two points on the map match their true
+# great-circle distance on the globe? No projection can hold all pairwise
+# distances (that would be an isometry), so we measure how far the map is from a
+# single consistent ruler:
+#
+#     eps_dist = Var( ln( d_map(P,Q) / d_globe(P,Q) ) )   over sampled pairs P,Q
+#
+# 0  <=>  every pairwise map distance equals the true distance times one constant
+# scale (a perfect ruler). Like eps_area it is a log-variance, so it ignores the
+# map's overall size. This is the classic third leg of the projection trilemma
+# (cf. Goldberg & Gott's distance error term).
+
+class DistanceSampler:
+    """A fixed, reproducible set of point pairs with precomputed geodesic
+    distances, for measuring global distance distortion."""
+
+    def __init__(self, n_anchor: int = 120, seed: int = 12345,
+                 min_sep_deg: float = 6.0, lat_limit_deg: float = 85.0):
+        rng = random.Random(seed)
+        smax = math.sin(math.radians(lat_limit_deg))
+        self.lat: List[float] = []
+        self.lon: List[float] = []
+        for _ in range(n_anchor):
+            self.lat.append(math.asin(rng.uniform(-smax, smax)))   # equal-area in lat
+            self.lon.append(rng.uniform(-math.pi, math.pi))
+        self.pairs: List[Tuple[int, int]] = []
+        self.ln_dg: List[float] = []
+        min_sep = math.radians(min_sep_deg)
+        for i in range(n_anchor):
+            for j in range(i + 1, n_anchor):
+                c = (math.sin(self.lat[i]) * math.sin(self.lat[j]) +
+                     math.cos(self.lat[i]) * math.cos(self.lat[j]) *
+                     math.cos(self.lon[i] - self.lon[j]))
+                d = math.acos(max(-1.0, min(1.0, c)))
+                if d > min_sep:
+                    self.pairs.append((i, j))
+                    self.ln_dg.append(math.log(d))
+        self.npairs = len(self.pairs)
+
+    def score(self, proj: Proj) -> float:
+        """Var(ln(d_map/d_globe)) over the pair set for a projection."""
+        n = len(self.lat)
+        xs = [0.0] * n
+        ys = [0.0] * n
+        for k in range(n):
+            xy = proj(self.lat[k], self.lon[k])
+            xs[k] = xy[0]
+            ys[k] = xy[1]
+        pr = self.pairs
+        lg = self.ln_dg
+        m = len(pr)
+        ratios = [0.0] * m
+        mean = 0.0
+        for t in range(m):
+            i, j = pr[t]
+            dm = math.hypot(xs[i] - xs[j], ys[i] - ys[j])
+            r = math.log(max(_TINY, dm)) - lg[t]
+            ratios[t] = r
+            mean += r
+        mean /= m
+        var = 0.0
+        for t in range(m):
+            d = ratios[t] - mean
+            var += d * d
+        return var / m
+
+
+def family_all(params: Sequence[float], grid, dsamp: DistanceSampler,
+               weights=None) -> Dict[str, float]:
+    """All three raw objectives for a family member: shape, area, dist (+fold)."""
+    from . import family
+    s = family_scores(params, grid, weights)
+    a, b = family.split(params)
+    proj = lambda la, lo: family.forward_ab(a, b, la, lo)
+    s["eps_dist"] = dsamp.score(proj)
+    return s
+
+
+def generic_all(proj: Proj, grid, dsamp: DistanceSampler, weights=None,
+                h: float = 1e-5) -> Dict[str, float]:
+    s = generic_scores(proj, grid, weights, h)
+    s["eps_dist"] = dsamp.score(proj)
+    return s

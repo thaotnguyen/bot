@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Autoresearch pipeline: hill-climb the Pareto frontier of world map
-projections, benchmark against the classics, and emit results.
+"""Autoresearch pipeline (3-objective): hill-climb the shape / area / distance
+Pareto surface of world map projections, benchmark against the classics, and
+emit results.
 
-Run:  python3 run_research.py
-Writes results/results.json and prints a summary table.
+Run:  python3 run_research.py   ->  results/results.json  + summary table.
 """
 
 from __future__ import annotations
@@ -14,187 +14,189 @@ import os
 import time
 from typing import Dict, List
 
-from mapopt import classics, metrics, optimize, population
-from mapopt.family import Grid, forward, split, X_TERMS, Y_TERMS, NPARAMS
+from mapopt import classics, metrics, optimize
+from mapopt.family import forward, X_TERMS, Y_TERMS, NPARAMS, Grid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "results")
 
 
-def score_classics(grid, weights) -> List[Dict]:
-    rows = []
-    for name, fn in classics.CLASSICS.items():
-        s = metrics.generic_scores(fn, grid, weights)
-        rows.append({
-            "name": name,
-            "eps_shape": s["eps_shape"],
-            "eps_area": s["eps_area"],
-            "combined": s["eps_shape"] + s["eps_area"],
-            "rms_angular_deg": s["rms_angular_deg"],
-            "rms_area_pct": s["rms_area_pct"],
-            "equal_area": name in classics.EQUAL_AREA,
-            "conformal": name in classics.CONFORMAL,
-        })
-    return rows
+def report_scores(fn_or_params, grid, dsamp, is_family):
+    if is_family:
+        s = metrics.family_all(fn_or_params, grid, dsamp, grid.area_w)
+    else:
+        s = metrics.generic_all(fn_or_params, grid, dsamp, grid.area_w)
+    return s
 
 
-def report_point(params, report_grid, weights) -> Dict:
-    s = metrics.family_scores(params, report_grid, weights)
-    return {
-        "params": [round(p, 8) for p in params],
+def pack(params, s, refs, extra=None):
+    d = {
+        "params": [round(p, 8) for p in params] if params is not None else None,
         "eps_shape": s["eps_shape"],
         "eps_area": s["eps_area"],
-        "combined": s["eps_shape"] + s["eps_area"],
+        "eps_dist": s["eps_dist"],
         "rms_angular_deg": s["rms_angular_deg"],
-        "rms_area_pct": s["rms_area_pct"],
-        "n_fold": int(s["n_fold"]),
+        "combined_norm": s["eps_shape"] / refs[0] + s["eps_area"] / refs[1] + s["eps_dist"] / refs[2],
     }
+    if extra:
+        d.update(extra)
+    return d
 
 
-def novelty(params, grid) -> Dict:
-    """How close is this projection to an anisotropic rescaling of a classic?
-
-    Returns the nearest classic and the normalized residual (%). A large
-    residual means the discovered map is genuinely not a stretched classic.
-    """
-    cx_champ = [forward(params, grid.lats[i], grid.lons[i]) for i in range(grid.n)]
-    champ_x = [p[0] for p in cx_champ]
-    champ_y = [p[1] for p in cx_champ]
-    denom = sum(x * x for x in champ_x) + sum(y * y for y in champ_y)
-    best_name, best_res = None, 1e9
-    per = {}
+def novelty(params, grid):
+    champ = [forward(params, grid.lats[i], grid.lons[i]) for i in range(grid.n)]
+    cx = [p[0] for p in champ]
+    cy = [p[1] for p in champ]
+    denom = sum(x * x for x in cx) + sum(y * y for y in cy)
+    best_name, best = None, 1e9
     for name, fn in classics.CLASSICS.items():
         cs = [fn(grid.lats[i], grid.lons[i]) for i in range(grid.n)]
-        cxx = [p[0] for p in cs]
-        cyy = [p[1] for p in cs]
-        sxn = sum(champ_x[i] * cxx[i] for i in range(grid.n))
-        sxd = sum(cxx[i] * cxx[i] for i in range(grid.n)) or 1.0
-        syn = sum(champ_y[i] * cyy[i] for i in range(grid.n))
-        syd = sum(cyy[i] * cyy[i] for i in range(grid.n)) or 1.0
-        sx, sy = sxn / sxd, syn / syd
-        res = sum((champ_x[i] - sx * cxx[i]) ** 2 for i in range(grid.n))
-        res += sum((champ_y[i] - sy * cyy[i]) ** 2 for i in range(grid.n))
+        ax = [p[0] for p in cs]
+        ay = [p[1] for p in cs]
+        sx = sum(cx[i] * ax[i] for i in range(grid.n)) / (sum(v * v for v in ax) or 1)
+        sy = sum(cy[i] * ay[i] for i in range(grid.n)) / (sum(v * v for v in ay) or 1)
+        res = sum((cx[i] - sx * ax[i]) ** 2 for i in range(grid.n)) + \
+              sum((cy[i] - sy * ay[i]) ** 2 for i in range(grid.n))
         pct = 100.0 * math.sqrt(res / denom)
-        per[name] = round(pct, 2)
-        if pct < best_res:
-            best_res, best_name = pct, name
-    return {"nearest_classic": best_name, "residual_pct": round(best_res, 2), "per_classic": per}
+        if pct < best:
+            best, best_name = pct, name
+    return {"nearest_classic": best_name, "residual_pct": round(best, 2)}
+
+
+def find_w(sweep, w):
+    return min(sweep, key=lambda p: sum((p["w"][i] - w[i]) ** 2 for i in range(3)))
 
 
 def main():
-    t_start = time.time()
+    t0 = time.time()
     os.makedirs(OUT, exist_ok=True)
 
-    OPT = Grid(lat_step=4.0, lon_step=6.0)      # optimization grid (fast)
-    REP = Grid(lat_step=2.5, lon_step=4.0)      # reporting grid (fine, official numbers)
-    print(f"opt grid: {OPT.n} pts | report grid: {REP.n} pts")
+    OPT = Grid(lat_step=4.0, lon_step=6.0)
+    REP = Grid(lat_step=2.5, lon_step=4.0)
+    OPT_D = metrics.DistanceSampler(n_anchor=90, seed=7)
+    REP_D = metrics.DistanceSampler(n_anchor=150, seed=101)
+    print(f"opt grid {OPT.n} pts / {OPT_D.npairs} pairs | report grid {REP.n} pts / {REP_D.npairs} pairs")
 
-    pop_opt = population.weights_for_grid(OPT)
-    pop_rep = population.weights_for_grid(REP)
+    # reference normalizers = equirectangular's three errors (report grid/sampler)
+    eqr = metrics.generic_all(classics.equirectangular, REP, REP_D)
+    refs = (eqr["eps_shape"], eqr["eps_area"], eqr["eps_dist"])
+    print(f"refs (equirect): shape={refs[0]:.4f} area={refs[1]:.4f} dist={refs[2]:.4f}")
 
-    # ---- baselines -------------------------------------------------------
-    print("scoring classic projections...")
-    classic_rows = score_classics(REP, REP.area_w)
-    classic_rows.sort(key=lambda r: r["combined"])
+    # ---- classics -------------------------------------------------------
+    print("scoring classics (shape/area/distance)...")
+    classic_rows = []
+    for name, fn in classics.CLASSICS.items():
+        s = metrics.generic_all(fn, REP, REP_D)
+        classic_rows.append(pack(None, s, refs, {
+            "name": name,
+            "equal_area": name in classics.EQUAL_AREA,
+            "conformal": name in classics.CONFORMAL,
+        }))
+    classic_rows.sort(key=lambda r: r["combined_norm"])
     winkel = next(r for r in classic_rows if r["name"] == "Winkel Tripel")
 
-    # ---- area-weighted Pareto sweep -------------------------------------
-    print("hill-climbing area-weighted Pareto frontier...")
-    t_list = [0.05, 0.12, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.88, 0.94]
-    sweep = optimize.pareto_sweep(OPT, OPT.area_w, t_list, steps=70, lr=0.02)
-    frontier = []
-    for pt in sweep:
-        rp = report_point(pt["params"], REP, REP.area_w)
-        rp["t"] = pt["t"]
-        frontier.append(rp)
-    frontier.sort(key=lambda r: r["eps_shape"])
+    # ---- 3-objective simplex sweep --------------------------------------
+    print("hill-climbing the shape/area/distance Pareto surface (15 weightings)...")
+    weights = optimize.simplex_weights(5)
+    raw = optimize.simplex_sweep(OPT, OPT_D, refs, weights, steps=65, lr=0.02)
+    surface = []
+    for pt in raw:
+        s = metrics.family_all(pt["params"], REP, REP_D, REP.area_w)  # re-score on report grid
+        surface.append(pack(pt["params"], s, refs, {"w": pt["w"], "n_fold": int(s["n_fold"])}))
 
-    # champions from the area-weighted frontier
-    equipoise = min(frontier, key=lambda r: r["combined"])
-    shape_champ = min(frontier, key=lambda r: r["eps_shape"])
-    area_champ = min(frontier, key=lambda r: r["eps_area"])
-    dominators = [r for r in frontier
-                  if r["eps_shape"] <= winkel["eps_shape"] and r["eps_area"] <= winkel["eps_area"]]
-    dominator = min(dominators, key=lambda r: r["combined"]) if dominators else None
-
-    # ---- population-weighted sweep --------------------------------------
-    print("hill-climbing population-weighted frontier...")
-    pop_sweep = optimize.pareto_sweep(OPT, pop_opt, [0.2, 0.35, 0.5, 0.65, 0.8], steps=70, lr=0.02)
-    pop_frontier = []
-    for pt in pop_sweep:
-        rp = report_point(pt["params"], REP, pop_rep)      # scored under population weight
-        rp_area = metrics.family_scores(pt["params"], REP, REP.area_w)  # also under area weight
-        rp["t"] = pt["t"]
-        rp["eps_shape_area_wt"] = rp_area["eps_shape"]
-        rp["eps_area_area_wt"] = rp_area["eps_area"]
-        pop_frontier.append(rp)
-    anthropocene = min(pop_frontier, key=lambda r: r["combined"])
-
-    # how do the classics do under the population weighting?
-    classic_pop = score_classics(REP, pop_rep)
-    classic_pop.sort(key=lambda r: r["combined"])
-
-    # ---- novelty ---------------------------------------------------------
-    print("checking novelty vs classics...")
-    nov = {
-        "Equipoise": novelty(equipoise["params"], REP),
-        "Anthropocene": novelty(anthropocene["params"], REP),
-        "ShapeChampion": novelty(shape_champ["params"], REP),
+    # champions (corners + centroid + minimax all-rounder + winkel dominator)
+    def at(w):
+        return find_w(surface, w)
+    champions = {
+        "Conformal":   {**at((1, 0, 0)), "desc": "shape-optimal corner (angles preserved)"},
+        "EqualArea":   {**at((0, 1, 0)), "desc": "area-optimal corner (sizes honest)"},
+        "Equidistant": {**at((0, 0, 1)), "desc": "distance-optimal corner (true ruler)"},
+        "Equipoise":   {**at((1/3, 1/3, 1/3)), "desc": "equal blend of all three objectives"},
     }
+    # minimax all-rounder: the surface point whose WORST normalized axis is lowest
+    def worst(p):
+        return max(p["eps_shape"] / refs[0], p["eps_area"] / refs[1], p["eps_dist"] / refs[2])
+    triathlon = min(surface, key=worst)
+    champions["Triathlon"] = {**triathlon, "desc": "minimizes its single worst axis (most even map)"}
+    # dominate Winkel on all three? first check the swept surface...
+    def dominates(p):
+        return (p["eps_shape"] <= winkel["eps_shape"] and p["eps_area"] <= winkel["eps_area"]
+                and p["eps_dist"] <= winkel["eps_dist"])
+    doms = [p for p in surface if dominates(p)]
+    dominator = min(doms, key=lambda p: p["combined_norm"]) if doms else None
+
+    # ...otherwise run a targeted solve that minimizes the WORST ratio to Winkel
+    if dominator is None:
+        wk_opt = metrics.generic_all(classics.winkel_tripel, OPT, OPT_D)
+        tgt = (wk_opt["eps_shape"], wk_opt["eps_area"], wk_opt["eps_dist"])
+        beta = 10.0
+
+        def f_beat(p):
+            from mapopt import family
+            sp = metrics.family_scores(p, OPT, OPT.area_w)
+            a, b = family.split(p)
+            dist = OPT_D.score(lambda la, lo: family.forward_ab(a, b, la, lo))
+            rs, ra, rd = sp["eps_shape"]/tgt[0], sp["eps_area"]/tgt[1], dist/tgt[2]
+            mx = max(rs, ra, rd)
+            lse = mx + math.log(math.exp(beta*(rs-mx)) + math.exp(beta*(ra-mx)) + math.exp(beta*(rd-mx)))/beta
+            return lse + 50.0 * sp["fold_pen"]
+
+        x_beat = optimize.optimize_obj(f_beat, triathlon["params"], OPT, steps=140, lr=0.015)
+        s_beat = metrics.family_all(x_beat, REP, REP_D, REP.area_w)
+        cand = pack(x_beat, s_beat, refs, {"w": None, "n_fold": int(s_beat["n_fold"])})
+        if dominates(cand):
+            dominator = cand
+    champions["WinkelDominator"] = ({**dominator, "desc": "beats Winkel Tripel on shape, area AND distance at once"}
+                                    if dominator else None)
+
+    nov = {k: novelty(champions[k]["params"], REP) for k in ["Equipoise", "Triathlon", "Equidistant"]}
 
     results = {
         "meta": {
             "generated": "2026-09-18",
-            "opt_grid_points": OPT.n,
-            "report_grid_points": REP.n,
-            "nparams": NPARAMS,
-            "x_terms": X_TERMS,
-            "y_terms": Y_TERMS,
-            "family": "x=sum a_ij u^(2i+1) v^(2j); y=sum b_ij u^(2i) v^(2j+1); u=lon/pi, v=lat/(pi/2)",
-            "metric": "eps_shape=<ln(a/b)^2>, eps_area=Var(ln(a*b)), area-weighted; combined=sum",
+            "opt_grid_points": OPT.n, "opt_pairs": OPT_D.npairs,
+            "report_grid_points": REP.n, "report_pairs": REP_D.npairs,
+            "nparams": NPARAMS, "x_terms": X_TERMS, "y_terms": Y_TERMS,
+            "objectives": {
+                "shape": "eps_shape = <ln(a/b)^2> (local angular, area-weighted)",
+                "area": "eps_area = Var(ln a*b) (local areal)",
+                "dist": "eps_dist = Var(ln(d_map/d_globe)) over point pairs (global)",
+            },
+            "refs_equirect": {"shape": refs[0], "area": refs[1], "dist": refs[2]},
             "runtime_s": None,
         },
-        "classics_area_weighted": classic_rows,
-        "classics_population_weighted": classic_pop,
-        "frontier_area_weighted": frontier,
-        "frontier_population_weighted": pop_frontier,
-        "champions": {
-            "Equipoise": {**equipoise, "desc": "min combined shape+area error (area-weighted)"},
-            "ShapeChampion": {**shape_champ, "desc": "min conformality error in the family"},
-            "AreaChampion": {**area_champ, "desc": "near-equal-area member of the family"},
-            "WinkelDominator": ({**dominator, "desc": "beats Winkel Tripel on BOTH axes"}
-                                if dominator else None),
-            "Anthropocene": {**anthropocene, "desc": "min combined error weighted by population"},
-        },
+        "classics": classic_rows,
+        "surface": surface,
+        "champions": champions,
         "winkel_reference": winkel,
         "novelty": nov,
-        "population_centers": population.CENTERS,
     }
-    results["meta"]["runtime_s"] = round(time.time() - t_start, 1)
-
+    results["meta"]["runtime_s"] = round(time.time() - t0, 1)
     with open(os.path.join(OUT, "results.json"), "w") as f:
         json.dump(results, f, indent=2)
 
-    # ---- print summary ---------------------------------------------------
-    print("\n=== CLASSICS (area-weighted, sorted by combined) ===")
-    print(f'{"projection":16s} {"shape":>8s} {"area":>8s} {"combined":>9s} {"ang°":>6s}')
+    # ---- summary --------------------------------------------------------
+    def line(name, r):
+        print(f'{name:20s} shape={r["eps_shape"]:.3f} area={r["eps_area"]:.3f} '
+              f'dist={r["eps_dist"]:.4f} | norm={r["combined_norm"]:.3f} ang={r["rms_angular_deg"]:.1f}')
+    print("\n=== CLASSICS (sorted by combined normalized error) ===")
     for r in classic_rows:
-        print(f'{r["name"]:16s} {r["eps_shape"]:8.4f} {r["eps_area"]:8.4f} {r["combined"]:9.4f} {r["rms_angular_deg"]:6.1f}')
-
-    print("\n=== HILL-CLIMBED FRONTIER (area-weighted) ===")
-    print(f'{"t":>5s} {"shape":>8s} {"area":>8s} {"combined":>9s} {"ang°":>6s} {"folds":>5s}')
-    for r in frontier:
-        print(f'{r["t"]:5.2f} {r["eps_shape"]:8.4f} {r["eps_area"]:8.4f} {r["combined"]:9.4f} {r["rms_angular_deg"]:6.1f} {r["n_fold"]:5d}')
-
-    print("\n=== HEADLINE ===")
-    print(f'Winkel Tripel     : shape={winkel["eps_shape"]:.4f} area={winkel["eps_area"]:.4f} combined={winkel["combined"]:.4f}')
-    print(f'Equipoise (ours)  : shape={equipoise["eps_shape"]:.4f} area={equipoise["eps_area"]:.4f} combined={equipoise["combined"]:.4f}')
+        line(r["name"], r)
+    print("\n=== DISCOVERED CHAMPIONS ===")
+    for k in ["Conformal", "EqualArea", "Equidistant", "Equipoise", "Triathlon"]:
+        line(k, champions[k])
+    print("\n=== HEADLINE vs Winkel Tripel ===")
+    line("Winkel Tripel", winkel)
+    line("Equipoise", champions["Equipoise"])
+    line("Triathlon", champions["Triathlon"])
     if dominator:
-        print(f'WinkelDominator   : shape={dominator["eps_shape"]:.4f} area={dominator["eps_area"]:.4f} combined={dominator["combined"]:.4f}  <-- beats Winkel on BOTH axes')
-    print(f'Anthropocene(pop) : shape={anthropocene["eps_shape"]:.4f} area={anthropocene["eps_area"]:.4f} combined={anthropocene["combined"]:.4f} (population-weighted)')
-    print("\nNovelty (min normalized residual vs any classic, higher=more novel):")
+        line("WinkelDominator", champions["WinkelDominator"])
+        print("  ^ lower on shape AND area AND distance simultaneously")
+    else:
+        print("  (no single family map dominates Winkel on all three axes)")
+    print("\nNovelty (residual vs nearest classic after best rescale):")
     for k, v in nov.items():
-        print(f'  {k:14s} nearest={v["nearest_classic"]:14s} residual={v["residual_pct"]}%')
+        print(f'  {k:12s} nearest={v["nearest_classic"]:20s} {v["residual_pct"]}%')
     print(f'\nDone in {results["meta"]["runtime_s"]}s -> results/results.json')
 
 

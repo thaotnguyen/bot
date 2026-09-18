@@ -6,12 +6,11 @@ Pure-Python (stdlib only) toolkit that:
   * measures distortion rigorously via Tissot's indicatrix (mapopt.metrics),
   * implements correctly-formulated classic projections as baselines
     (mapopt.classics),
-  * builds an approximate human-population weighting (mapopt.population),
-  * hill-climbs the family's coefficients along a multi-objective Pareto
-    frontier of shape vs. area error (mapopt.optimize).
+  * hill-climbs the family's coefficients across the 3-objective Pareto surface
+    of shape vs. area vs. distance error (mapopt.optimize).
 
 No third-party dependencies: everything runs on a stock Python 3 install so the
 research is fully reproducible from the committed source.
 """
 
-__all__ = ["family", "metrics", "classics", "population", "optimize"]
+__all__ = ["family", "metrics", "classics", "optimize"]

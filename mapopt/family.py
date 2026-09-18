@@ -62,9 +62,8 @@ def split(params: Sequence[float]) -> Tuple[List[float], List[float]]:
     return list(params[:NX]), list(params[NX:])
 
 
-def forward(params: Sequence[float], lat: float, lon: float) -> Tuple[float, float]:
-    """Project a single (lat, lon) in radians to plane coordinates (x, y)."""
-    a, b = split(params)
+def forward_ab(a: Sequence[float], b: Sequence[float], lat: float, lon: float) -> Tuple[float, float]:
+    """Project (lat, lon) in radians using pre-split coefficient lists a, b."""
     u = lon / PI
     v = lat / HALF_PI
     x = 0.0
@@ -74,6 +73,12 @@ def forward(params: Sequence[float], lat: float, lon: float) -> Tuple[float, flo
     for k, (i, j) in enumerate(Y_TERMS):
         y += b[k] * (u ** (2 * i)) * (v ** (2 * j + 1))
     return x, y
+
+
+def forward(params: Sequence[float], lat: float, lon: float) -> Tuple[float, float]:
+    """Project a single (lat, lon) in radians to plane coordinates (x, y)."""
+    a, b = split(params)
+    return forward_ab(a, b, lat, lon)
 
 
 # ---------------------------------------------------------------------------

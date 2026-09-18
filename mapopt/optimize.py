@@ -108,3 +108,111 @@ def pareto_filter(points: List[Dict]) -> List[Dict]:
         if not dominated:
             keep.append(p)
     return keep
+
+
+# ---------------------------------------------------------------------------
+# Three-objective optimization: shape vs area vs distance
+# ---------------------------------------------------------------------------
+# Objectives are normalized by a reference map (equirectangular) so the three
+# comparable-at-~1 numbers can be blended with barycentric weights that sweep the
+# 2-D Pareto *surface* in 3-objective space.
+
+def family_objective3(params, grid, dsamp, refs, w, fold_lambda: float = 50.0) -> float:
+    from . import family
+    s = metrics.family_scores(params, grid, grid.area_w)
+    a, b = family.split(params)
+    proj = lambda la, lo: family.forward_ab(a, b, la, lo)
+    dist = dsamp.score(proj)
+    return (w[0] * s["eps_shape"] / refs[0] +
+            w[1] * s["eps_area"] / refs[1] +
+            w[2] * dist / refs[2] +
+            fold_lambda * s["fold_pen"])
+
+
+def optimize_single3(grid, dsamp, refs, w, x0, steps: int = 70, lr: float = 0.02,
+                     fold_lambda: float = 50.0):
+    x = list(x0)
+    m = [0.0] * len(x)
+    v = [0.0] * len(x)
+    b1, b2, eps_a = 0.9, 0.999, 1e-8
+
+    def f(p):
+        return family_objective3(p, grid, dsamp, refs, w, fold_lambda)
+
+    for step in range(1, steps + 1):
+        x = gauge_fix(x, grid, grid.area_w)
+        base = f(x)
+        g = _grad(f, x, base)
+        for i in range(len(x)):
+            m[i] = b1 * m[i] + (1 - b1) * g[i]
+            v[i] = b2 * v[i] + (1 - b2) * g[i] * g[i]
+            mhat = m[i] / (1 - b1 ** step)
+            vhat = v[i] / (1 - b2 ** step)
+            x[i] -= lr * mhat / (math.sqrt(vhat) + eps_a)
+    x = gauge_fix(x, grid, grid.area_w)
+    return x, metrics.family_all(x, grid, dsamp, grid.area_w)
+
+
+def simplex_weights(n: int):
+    """Barycentric weight grid: all (i,j,k)/n with i+j+k=n. n=4 -> 15 points."""
+    out = []
+    for i in range(n + 1):
+        for j in range(n + 1 - i):
+            k = n - i - j
+            out.append((i / n, j / n, k / n))
+    return out
+
+
+def simplex_sweep(grid, dsamp, refs, weights, steps: int = 60, lr: float = 0.02):
+    """Trace the shape/area/distance Pareto surface; warm-start each solve from
+    the nearest already-solved weight (good continuation across the simplex)."""
+    def dist_w(a, b):
+        return sum((a[i] - b[i]) ** 2 for i in range(3))
+    centroid = (1 / 3, 1 / 3, 1 / 3)
+    order = sorted(range(len(weights)), key=lambda i: dist_w(weights[i], centroid))
+    solved = {}         # index -> params
+    results = [None] * len(weights)
+    for idx in order:
+        w = weights[idx]
+        if not solved:
+            x0 = init_equirectangular()
+        else:
+            nearest = min(solved.keys(), key=lambda j: dist_w(weights[j], w))
+            x0 = solved[nearest]
+        x, s = optimize_single3(grid, dsamp, refs, w, x0, steps=steps, lr=lr)
+        solved[idx] = x
+        results[idx] = {
+            "w": list(w),
+            "params": list(x),
+            "eps_shape": s["eps_shape"],
+            "eps_area": s["eps_area"],
+            "eps_dist": s["eps_dist"],
+            "rms_angular_deg": s["rms_angular_deg"],
+            "n_fold": int(s["n_fold"]),
+        }
+    return results
+
+
+def optimize_obj(f, x0, grid, steps: int = 100, lr: float = 0.02):
+    """Adam on an arbitrary objective f(params)->float, gauge-fixed each step."""
+    x = list(x0)
+    m = [0.0] * len(x)
+    v = [0.0] * len(x)
+    b1, b2, eps_a = 0.9, 0.999, 1e-8
+    best, best_x = float("inf"), list(x)
+    for step in range(1, steps + 1):
+        x = gauge_fix(x, grid, grid.area_w)
+        base = f(x)
+        if base < best:
+            best, best_x = base, list(x)
+        g = _grad(f, x, base)
+        for i in range(len(x)):
+            m[i] = b1 * m[i] + (1 - b1) * g[i]
+            v[i] = b2 * v[i] + (1 - b2) * g[i] * g[i]
+            mhat = m[i] / (1 - b1 ** step)
+            vhat = v[i] / (1 - b2 ** step)
+            x[i] -= lr * mhat / (math.sqrt(vhat) + eps_a)
+    x = gauge_fix(x, grid, grid.area_w)
+    if f(x) < best:
+        best_x = list(x)
+    return best_x
