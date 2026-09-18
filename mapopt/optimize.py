@@ -216,3 +216,55 @@ def optimize_obj(f, x0, grid, steps: int = 100, lr: float = 0.02):
     if f(x) < best:
         best_x = list(x)
     return best_x
+
+
+# ---------------------------------------------------------------------------
+# Generic optimizer over any Family (outline/topology as a search dimension)
+# ---------------------------------------------------------------------------
+
+def _clamp_params(x, bounds):
+    if bounds:
+        for i, bd in enumerate(bounds):
+            if bd is not None:
+                lo, hi = bd
+                if x[i] < lo: x[i] = lo
+                if x[i] > hi: x[i] = hi
+    return x
+
+
+def optimize_family(fam, grid, dsamp, refs, w, x0=None, steps: int = 70, lr: float = 0.02,
+                    fold_lambda: float = 50.0, anchor: float = 0.003):
+    """Minimize w-weighted (shape,area,dist) for an arbitrary Family.
+
+    No gauge-fix: the metrics are scale-invariant and a light anchor keeps the
+    map's mean |det| ~ 1 (fixing only the uniform-scale gauge, not aspect or the
+    superellipse exponent). Parameters are clamped to the family's bounds.
+    """
+    x = list(x0 if x0 is not None else fam.p0())
+    bounds = fam.bounds
+    m = [0.0] * len(x); v = [0.0] * len(x)
+    b1, b2, eps_a = 0.9, 0.999, 1e-8
+
+    def f(p):
+        s = metrics.famscore(fam, p, grid, dsamp)
+        anc = anchor * (math.log(max(1e-9, s["mean_abs_det"]))) ** 2
+        return (w[0] * s["eps_shape"] / refs[0] + w[1] * s["eps_area"] / refs[1] +
+                w[2] * s["eps_dist"] / refs[2] + fold_lambda * s["fold_pen"] + anc)
+
+    best, best_x = float("inf"), list(x)
+    for step in range(1, steps + 1):
+        x = _clamp_params(x, bounds)
+        base = f(x)
+        if base < best:
+            best, best_x = base, list(x)
+        g = _grad(f, x, base)
+        for i in range(len(x)):
+            m[i] = b1 * m[i] + (1 - b1) * g[i]
+            v[i] = b2 * v[i] + (1 - b2) * g[i] * g[i]
+            mhat = m[i] / (1 - b1 ** step)
+            vhat = v[i] / (1 - b2 ** step)
+            x[i] -= lr * mhat / (math.sqrt(vhat) + eps_a)
+    x = _clamp_params(x, bounds)
+    if f(x) < best:
+        best_x = list(x)
+    return best_x, metrics.famscore(fam, best_x, grid, dsamp)

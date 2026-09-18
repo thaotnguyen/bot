@@ -75,8 +75,34 @@ def main():
         "equal_area": c["equal_area"], "conformal": c["conformal"],
     } for c in r["classics"]]
 
+    # outline meta-search (optional)
+    outlines = None
+    op = os.path.join(HERE, "results", "outlines.json")
+    if os.path.exists(op):
+        o = json.load(open(op))
+        TYPE = {"Cylindrical": "cyl", "Pseudocylindrical": "pseudo",
+                "Lenticular": "lent", "Azimuthal": "azim", "Superellipse": "super"}
+        gal = []
+        for fr in o["families"]:
+            b = fr["blends"]["balanced"]
+            ty = TYPE[fr["label"]]
+            spec = {"label": fr["label"], "outline": fr["outline"], "type": ty,
+                    "shape": b["shape"], "area": b["area"], "dist": b["dist"], "norm": b["norm"],
+                    "note": b.get("note", ""),
+                    "best": {k: fr["blends"][k][{"shape": "shape", "area": "area", "distance": "dist"}[k]]
+                             for k in ["shape", "area", "distance"]}}
+            if ty == "lent":
+                spec["a"], spec["b"] = ab(b["params"])
+            else:
+                spec["params"] = [round(v, 6) for v in b["params"]]
+            gal.append(spec)
+        psweep = [{"p": ps["p"], "norm": ps["norm"], "params": [round(v, 6) for v in ps["params"]]}
+                  for ps in o["superellipse_p_sweep"]]
+        outlines = {"families": gal, "p_sweep": psweep}
+
     w = r["winkel_reference"]
     data = {
+        "outlines": outlines,
         "xterms": X_TERMS, "yterms": Y_TERMS,
         "refs": {"shape": round(refs[0], 4), "area": round(refs[1], 4), "dist": round(refs[2], 4)},
         "surface": surface,

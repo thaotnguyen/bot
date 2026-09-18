@@ -111,7 +111,18 @@ select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:1
 .bar{height:8px;border-radius:20px;background:linear-gradient(90deg,var(--dist),var(--ours))}
 .board .elo{font-family:var(--mono);text-align:right}
 .board .rec{font-family:var(--mono);color:var(--muted);text-align:right;font-size:12.5px}
+.gallery{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:8px}
+.gcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;box-shadow:var(--sh)}
+.gcard.best{border-color:var(--ours);box-shadow:0 0 0 1px var(--ours),var(--sh)}
+.gcard .mw{position:relative;width:100%;aspect-ratio:1/0.72;border-radius:8px;overflow:hidden;background:var(--inset)}
+.gcard .gl{font-family:var(--disp);font-size:14px;font-weight:600;margin-top:8px}
+.gcard .gl .crown{color:var(--ours);font-size:12px}
+.gcard .go{font-size:11px;color:var(--muted);min-height:2.2em}
+.gcard .gn{margin-top:6px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.gcard .gbar{height:6px;border-radius:20px;margin-top:4px;background:var(--line);overflow:hidden}
+.gcard .gbar i{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,var(--dist),var(--bad))}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+#pcurve{width:100%;height:auto;display:block}
 .steps{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:8px}
 .step{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
 .step .n{font-family:var(--mono);font-size:12px;color:var(--ours)}
@@ -123,8 +134,8 @@ select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:1
 .callout b{color:var(--ours)}
 footer{border-top:1px solid var(--line);padding-block:26px 44px;color:var(--muted);font-size:13px}
 footer code{font-family:var(--mono);font-size:12px;background:var(--inset);padding:2px 6px;border-radius:5px}
-@media (max-width:820px){.studio{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}}
-@media (max-width:560px){.duel{grid-template-columns:1fr;gap:12px}.vs{text-align:center}.steps{grid-template-columns:1fr}}
+@media (max-width:820px){.studio{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.gallery{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:560px){.duel{grid-template-columns:1fr;gap:12px}.vs{text-align:center}.steps{grid-template-columns:1fr}.gallery{grid-template-columns:1fr 1fr}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 
@@ -191,10 +202,33 @@ footer code{font-family:var(--mono);font-size:12px;background:var(--inset);paddi
     </div>
   </section>
 
+  <section id="outline">
+    <div class="eyebrow">02 — Does the outline itself matter?</div>
+    <h2>Rectangle, oval, lens, or disc?</h2>
+    <p class="lede">Everything above searched inside one boundary shape. Here the <i>outline is the variable</i>: we re-run the whole
+      optimization within each family and see which silhouette can go furthest. It matters a lot — and the machine rediscovers why
+      every great compromise map is a rounded lens.</p>
+    <div class="gallery" id="gallery"></div>
+    <div class="callout" id="outwin"></div>
+    <div class="studio" style="margin-top:24px">
+      <div class="card mapcard">
+        <div class="mapwrap"><canvas id="semap"></canvas></div>
+        <div class="mapcap"><div class="name">Free outline knob</div><div class="sub" id="sesub"></div></div>
+      </div>
+      <div class="card panel">
+        <div class="field"><label>Outline exponent p — drag diamond ◆ → ellipse ○ → rectangle ▭</label>
+          <input type="range" id="pslider" min="115" max="650" value="250" step="1" aria-label="superellipse exponent">
+          <div class="trihint" id="phint"></div></div>
+        <div class="field"><label>Total error vs. outline roundness (re-optimized at each p)</label>
+          <svg id="pcurve" viewBox="0 0 320 180" role="img" aria-label="error versus outline exponent"></svg></div>
+      </div>
+    </div>
+  </section>
+
   <section id="vote">
     <div class="pollhead">
       <div>
-        <div class="eyebrow">02 — The projection election</div>
+        <div class="eyebrow">03 — The projection election</div>
         <h2>Which map do you prefer?</h2>
       </div>
       <div class="mode" id="mode">connecting…</div>
@@ -216,7 +250,7 @@ footer code{font-family:var(--mono);font-size:12px;background:var(--inset);paddi
   </section>
 
   <section id="method">
-    <div class="eyebrow">03 — How the machine finds a map</div>
+    <div class="eyebrow">04 — How the machine finds a map</div>
     <h2>Autoresearch, in four moves</h2>
     <div class="grid2">
       <div>
@@ -500,8 +534,64 @@ document.getElementById('duelB').addEventListener('keydown',function(e){if(e.key
 document.getElementById('skipBtn').addEventListener('click',newPair);
 poll.onChange(renderBoard);
 
-function boot(){resizeMain();newPair();poll.init();}
-var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){resizeMain();if(pair[0]){drawMini(document.getElementById('canA'),pair[0].fn);drawMini(document.getElementById('canB'),pair[1].fn);}},180);});
+/* ---------- outline meta-search section ---------- */
+function cylFn(p){var A=p[0],b1=p[1],b2=p[2],b3=p[3];return function(la,lo){var t=la/HP;return [A*lo,b1*t+b2*t*t*t+b3*Math.pow(t,5)];};}
+function pseudoFn(p){var a0=p[0],a1=p[1],a2=p[2],b1=p[3],b2=p[4],b3=p[5];return function(la,lo){var t=la/HP,h=a0+a1*t*t+a2*Math.pow(t,4);return [lo*h,b1*t+b2*t*t*t+b3*Math.pow(t,5)];};}
+function azimFn(p){var d1=p[0],d2=p[1],d3=p[2];return function(la,lo){var c=HP-la,R=d1*c+d2*c*c+d3*c*c*c;return [R*Math.sin(lo),-R*Math.cos(lo)];};}
+function superFn(p){var pw=p[0],A=p[1],B=p[2],b1=p[3],b2=p[4],b3=p[5],nmax=(b1+b2+b3)||1e-9;return function(la,lo){var t=la/HP,eta=(b1*t+b2*t*t*t+b3*Math.pow(t,5))/nmax;eta=Math.max(-0.999999,Math.min(0.999999,eta));var W=Math.max(1e-9,1-Math.pow(Math.abs(eta),pw));return [(lo/PI)*A*Math.pow(W,1/pw),B*eta];};}
+function projFromSpec(s){if(s.type==='lent')return familyFn(s.a,s.b);if(s.type==='cyl')return cylFn(s.params);if(s.type==='pseudo')return pseudoFn(s.params);if(s.type==='azim')return azimFn(s.params);if(s.type==='super')return superFn(s.params);return CL.Equirectangular;}
+function renderGallery(){
+  if(!D.outlines){document.getElementById('outline').hidden=true;return;}
+  var fams=D.outlines.families,g=document.getElementById('gallery');
+  var maxN=Math.max.apply(null,fams.map(function(f){return f.norm;})),minN=Math.min.apply(null,fams.map(function(f){return f.norm;}));
+  var bestN=minN;
+  g.innerHTML='';
+  fams.forEach(function(f,i){
+    var best=Math.abs(f.norm-bestN)<1e-6;
+    var card=document.createElement('div');card.className='gcard'+(best?' best':'');
+    card.innerHTML='<div class="mw"><canvas id="g'+i+'"></canvas></div>'+
+      '<div class="gl">'+f.outline.replace(/ \(.*/,'')+(best?' <span class="crown">★ best</span>':'')+'</div>'+
+      '<div class="go">'+f.label+' · total error '+f.norm.toFixed(2)+'</div>'+
+      '<div class="gbar"><i style="width:'+Math.round((f.norm-minN)/(maxN-minN)*100)+'%"></i></div>';
+    g.appendChild(card);
+  });
+  fams.forEach(function(f,i){var cv=document.getElementById('g'+i);var s=setupCanvas(cv);var fn=projFromSpec(f);var set=screenSet(fn,s.w,s.h,7);drawSet(s.ctx,set,s.w,s.h,{grat:true,land:true,mini:true});});
+  // winners callout
+  function winner(metric){return fams.reduce(function(a,b){return b.best[metric]<a.best[metric]?b:a;});}
+  var ws=winner('shape'),wa=winner('area'),wd=winner('distance');
+  var lens=fams.filter(function(f){return f.type==='lent';})[0],disc=fams.filter(function(f){return f.type==='azim';})[0];
+  document.getElementById('outwin').innerHTML='<b>The outline is not cosmetic.</b> Best total error ranges from <b class="mono">'+bestN.toFixed(2)+'</b> (rounded lens) to <b class="mono">'+maxN.toFixed(2)+'</b> (disc) — a 3× spread. The rounded lens wins <b>shape</b> and <b>distance</b>; and the disc, the classic “distance” projection, is actually <i>worse</i> at global distance ('+disc.best.distance.toFixed(3)+') than the lens ('+lens.best.distance.toFixed(3)+'). This is why Winkel, Robinson and Aitoff are all lens-shaped.';
+}
+var pBase=null;
+function initOutline(){
+  if(!D.outlines)return;
+  var sweep=D.outlines.p_sweep;
+  pBase=sweep.reduce(function(a,b){return b.norm<a.norm?b:a;}).params.slice(); // best-p param set
+  var sl=document.getElementById('pslider');
+  function drawP(){var pv=(+sl.value)/100;var params=pBase.slice();params[0]=pv;var fn=superFn(params);
+    var s=setupCanvas(document.getElementById('semap'));var set=screenSet(fn,s.w,s.h,14);drawSet(s.ctx,set,s.w,s.h,{grat:true,land:true});
+    var kind=pv<1.5?'diamond':(pv<2.6?'ellipse':(pv<4.5?'rounded rectangle':'rectangle'));
+    document.getElementById('sesub').textContent='p = '+pv.toFixed(2)+' · '+kind+' outline';
+    document.getElementById('phint').textContent='the optimizer’s best outline is p≈2.5 (rounded), not a rectangle or a diamond';
+    drawCurve(pv);}
+  function drawCurve(pv){var svg=document.getElementById('pcurve'),W=320,H=180,ml=40,mb=28,mt=10,mr=10;
+    var xs=sweep.map(function(s){return s.p;}),ys=sweep.map(function(s){return s.norm;});
+    var xmin=1.1,xmax=6.1,ymin=Math.min.apply(null,ys)*0.98,ymax=Math.max.apply(null,ys)*1.02;
+    var cl=css('--line'),co=css('--ours'),cm=css('--muted'),cf=css('--faint'),cg=css('--good');
+    function X(v){return ml+(v-xmin)/(xmax-xmin)*(W-ml-mr);}function Y(v){return H-mb-(v-ymin)/(ymax-ymin)*(H-mb-mt);}
+    var s='<rect x="'+ml+'" y="'+mt+'" width="'+(W-ml-mr)+'" height="'+(H-mb-mt)+'" fill="none" stroke="'+cl+'"/>';
+    [1.2,2,3,4,6].forEach(function(v){s+='<text x="'+X(v)+'" y="'+(H-mb+13)+'" fill="'+cf+'" font-size="9" font-family="monospace" text-anchor="middle">'+v+'</text>';});
+    s+='<text x="'+((W+ml)/2)+'" y="'+(H-2)+'" fill="'+cm+'" font-size="10" text-anchor="middle">outline exponent p  (round → rectangular)</text>';
+    var pts=sweep.map(function(sm){return X(sm.p)+','+Y(sm.norm);}).join(' ');
+    s+='<polyline points="'+pts+'" fill="none" stroke="'+co+'" stroke-width="2"/>';
+    sweep.forEach(function(sm){var best=sm.norm===Math.min.apply(null,ys);s+='<circle cx="'+X(sm.p)+'" cy="'+Y(sm.norm)+'" r="'+(best?4:2.5)+'" fill="'+(best?cg:co)+'"/>';});
+    s+='<line x1="'+X(pv)+'" y1="'+mt+'" x2="'+X(pv)+'" y2="'+(H-mb)+'" stroke="'+cm+'" stroke-dasharray="3 3"/>';
+    svg.innerHTML=s;}
+  sl.addEventListener('input',drawP);drawP();
+}
+
+function boot(){resizeMain();newPair();poll.init();renderGallery();initOutline();}
+var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){resizeMain();if(pair[0]){drawMini(document.getElementById('canA'),pair[0].fn);drawMini(document.getElementById('canB'),pair[1].fn);}renderGallery();var sl=document.getElementById('pslider');if(sl)sl.dispatchEvent(new Event('input'));},180);});
 if(document.readyState!=='loading')setTimeout(boot,0);else document.addEventListener('DOMContentLoaded',boot);
 })();
 </script>

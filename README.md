@@ -87,11 +87,45 @@ optimizer can't compute, and a future round could fold it back in as a fourth ax
 
 ---
 
+## Does the outline itself matter? (outline meta-search)
+
+The families above all share one boundary *type*. A deeper question: is the
+**outline / topology** — rectangle vs. oval vs. rounded lens vs. disc — itself a
+lever worth optimizing? So we re-run the whole optimization *inside each outline
+family* and compare (`run_outlines.py`).
+
+Best achievable error per outline (report grid; balanced = sum of the three
+normalized errors, equirect = 3.00):
+
+| outline | best shape | best area | best distance | **balanced** |
+|---|---|---|---|---|
+| **rounded lens** (curved parallels) | **0.008** | 0.013 | **0.124** | **1.70** |
+| oval / lens (straight parallels) | 0.016 | 0.001 | 0.135 | 1.97 |
+| superellipse (tunable) | 0.015 | **0.000** | 0.134 | 1.98 |
+| rectangle (cylindrical) | 0.015 | 0.013 | 0.154 | 2.38 |
+| disc (azimuthal) | 0.181 | 0.004 | 0.148 | **5.39** |
+
+**Findings:**
+- **The outline is not cosmetic** — balanced error spans 1.70 → 5.39, a **3× gap**.
+- **The rounded lens (curved parallels) wins shape, distance, and overall** — the
+  machine independently rediscovers *why* Winkel/Robinson/Aitoff are lens-shaped.
+- **The disc (azimuthal) is worst overall, and — counter-intuitively — not even
+  best at distance**: its 0.148 loses to the lens's 0.124. The azimuthal
+  equidistant only wins distance *from its center point*, not global pairwise.
+- **Optimal "roundness" is a superellipse of exponent p≈2.5** (rounder than an
+  ellipse). Both extremes are worse: rectangle (p→∞) 2.17, diamond (p≈1) 2.96.
+  The web explorer lets you drag `p` and watch the error curve.
+
+Each outline is a `Family` in `mapopt/families.py` with analytic partials, driven
+by one generic optimizer — so adding a new boundary type (hexagon, interrupted
+lobes, plane-tiling) is a matter of writing one more `Family`.
+
 ## Reproduce it
 
 ```bash
 python3 run_research.py     # ~3-4 min: 3-objective simplex sweep + targeted
                             #           Winkel-dominator + benchmarks -> results/results.json
+python3 run_outlines.py     # ~2 min: outline meta-search -> results/outlines.json
 python3 export_web.py       # results + Natural Earth coastlines -> web/appdata.js
 python3 -m http.server -d web 8000    # then open http://localhost:8000
 ```
@@ -120,13 +154,15 @@ these coordinates sit on no historical projection.
 
 ```
 mapopt/
-  family.py       parametric projection family + grid + precomputed basis
+  family.py       the lenticular polynomial family + grid + precomputed basis
+  families.py     outline families: cylindrical/pseudocyl/lenticular/azimuthal/superellipse
   metrics.py      Tissot shape/area + global pairwise distance metric
   classics.py     correctly-formulated baseline projections (incl. az. equidistant)
-  optimize.py     Adam hill-climber, 3-objective simplex sweep, targeted solve
-run_research.py   the pipeline -> results/results.json
+  optimize.py     Adam hill-climber, 3-objective simplex sweep, targeted + generic solvers
+run_research.py   3-objective pipeline -> results/results.json
+run_outlines.py   outline meta-search -> results/outlines.json
 export_web.py     results + coastlines -> web/appdata.js
-web/index.html    ternary explorer (shape/area/distance) + projection-election poll
+web/index.html    ternary explorer + outline gallery + projection-election poll
 results/          machine-written outputs (checked in for convenience)
 ```
 

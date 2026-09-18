@@ -65,22 +65,21 @@ def scores_from_partials(xlat: Sequence[float], xlon: Sequence[float],
     n = len(xlat)
     ln_ratio2 = 0.0        # sum w * ln(a/b)^2
     ln_area = [0.0] * n
-    fold_pen = 0.0
-    n_fold = 0
+    dets = [0.0] * n
     omega2 = 0.0
+    mean_abs_det = 0.0
     for i in range(n):
         s1sq, s2sq, det = _svd2(xlat[i], xlon[i], ylat[i], ylon[i], cos[i])
         w = weights[i]
         lr = 0.5 * math.log(s1sq / s2sq)         # ln(a/b) >= 0
         ln_ratio2 += w * lr * lr
         ln_area[i] = 0.5 * math.log(s1sq * s2sq)  # ln(a*b) == ln|det|
+        dets[i] = det
+        mean_abs_det += w * abs(det)
         a = math.sqrt(s1sq)
         b = math.sqrt(s2sq)
         om = 2.0 * math.asin(min(1.0, (a - b) / (a + b)))
         omega2 += w * om * om
-        if det <= fold_tau:
-            fold_pen += w * (fold_tau - det) * (fold_tau - det)
-            n_fold += 1
 
     mean_la = 0.0
     for i in range(n):
@@ -90,10 +89,24 @@ def scores_from_partials(xlat: Sequence[float], xlon: Sequence[float],
         d = ln_area[i] - mean_la
         var_la += weights[i] * d * d
 
+    # scale-invariant fold barrier: penalize det that dips below a small
+    # fraction of the map's typical |det| (0 => orientation flip / overlap)
+    m = max(mean_abs_det, _TINY)
+    thr = fold_tau * m
+    fold_pen = 0.0
+    n_fold = 0
+    for i in range(n):
+        if dets[i] <= thr:
+            e = (thr - dets[i]) / m
+            fold_pen += weights[i] * e * e
+        if dets[i] <= 0.0:
+            n_fold += 1
+
     return {
         "eps_shape": ln_ratio2,
         "eps_area": var_la,
         "mean_ln_area": mean_la,
+        "mean_abs_det": mean_abs_det,
         "fold_pen": fold_pen,
         "n_fold": float(n_fold),
         "rms_angular_deg": math.degrees(math.sqrt(max(0.0, omega2))),
@@ -238,4 +251,14 @@ def generic_all(proj: Proj, grid, dsamp: DistanceSampler, weights=None,
                 h: float = 1e-5) -> Dict[str, float]:
     s = generic_scores(proj, grid, weights, h)
     s["eps_dist"] = dsamp.score(proj)
+    return s
+
+
+def famscore(fam, params, grid, dsamp, weights=None) -> Dict[str, float]:
+    """Full 3-objective score for any Family object (analytic local + pairwise dist)."""
+    if weights is None:
+        weights = grid.area_w
+    xlat, xlon, ylat, ylon = fam.partials(params, grid)
+    s = scores_from_partials(xlat, xlon, ylat, ylon, grid.cos, weights)
+    s["eps_dist"] = dsamp.score(lambda la, lo: fam.forward(params, la, lo))
     return s
