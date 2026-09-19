@@ -1,0 +1,10 @@
+{
+  "name": "pareto-atlas-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Explore, vote on, and rank autoresearched world map projections.",
+  "dependencies": {
+    "@upstash/redis": "^1.34.3"
+  }
+}

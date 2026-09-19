@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pareto Atlas</title>
+<meta name="description" content="Explore, vote on, and rank autoresearched world map projections.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#eaeef2;--surface:#fff;--surface-2:#f4f7fa;--inset:#eef2f6;
+  --ink:#14202b;--muted:#5c6b7a;--faint:#8695a3;--line:#d7dee5;
+  --ocean:#d5e5f0;--land:#cbd3c2;--landline:#9fb08f;
+  --shape:#1d6fb8;--area:#d98a2b;--dist:#2f9e73;--ours:#b5397f;--ours-soft:#f0d9e6;
+  --good:#2f8f5b;--bad:#c0392b;
+  --disp:"Fraunces",Georgia,serif;--ui:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace;
+  --sh:0 1px 2px rgba(20,32,43,.05),0 6px 20px rgba(20,32,43,.06);--r:14px;
+}
+@media (prefers-color-scheme:dark){:root{
+  --ground:#0b131d;--surface:#101b28;--surface-2:#16263a;--inset:#0d1723;
+  --ink:#e7edf3;--muted:#93a4b5;--faint:#6a7d90;--line:#23374a;
+  --ocean:#123049;--land:#33463b;--landline:#4c6a52;
+  --shape:#59a6e6;--area:#e6a856;--dist:#4cc493;--ours:#e766a8;--ours-soft:#3a2033;
+}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--ground);color:var(--ink);font-family:var(--ui);line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px}
+h1,h2,h3{margin:0;font-weight:600;text-wrap:balance}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+header{padding-block:22px 0;border-bottom:1px solid var(--line);position:sticky;top:0;background:color-mix(in srgb,var(--ground) 88%,transparent);backdrop-filter:blur(8px);z-index:10}
+.brand{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--disp);font-size:clamp(24px,5vw,36px);letter-spacing:-.01em}
+.brand .tag{font-size:12.5px;color:var(--muted)}
+.tabs{display:flex;gap:4px;margin-top:16px}
+.tabs button{appearance:none;border:0;background:none;font-family:var(--ui);font-size:14px;font-weight:500;color:var(--muted);
+  padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--ours)}
+.tabs button:hover{color:var(--ink)}
+main{padding-block:26px 60px}
+section[hidden]{display:none}
+.lede{max-width:64ch;color:var(--muted);margin:2px 0 20px}
+h2{font-family:var(--disp);font-size:clamp(21px,4vw,28px);letter-spacing:-.01em}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh)}
+.studio{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:start}
+.mapcard{padding:14px}
+.mapwrap{position:relative;width:100%;aspect-ratio:2/1.15;border-radius:10px;overflow:hidden;background:var(--inset)}
+canvas{display:block;width:100%;height:100%}
+.mapcap{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:10px;flex-wrap:wrap}
+.mapcap .name{font-family:var(--disp);font-size:19px;font-weight:600}
+.mapcap .name .tag{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-left:8px;padding:2px 7px;border-radius:20px;background:var(--ours-soft);color:var(--ours)}
+.mapcap .sub{font-size:13px;color:var(--muted)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}
+.legend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px}
+.panel{padding:18px;display:flex;flex-direction:column;gap:16px}
+.field>label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{appearance:none;font-family:var(--ui);font-size:12.5px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:6px 12px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--ours);border-color:var(--ours);color:#fff}
+.tri{width:100%;touch-action:none;cursor:crosshair;display:block}
+.trihint{font-size:12px;color:var(--muted);margin-top:2px;text-align:center}
+.sliders{display:flex;flex-direction:column;gap:10px}
+.srow{display:grid;grid-template-columns:64px 1fr 40px;align-items:center;gap:10px}
+.srow .lab{font-size:12.5px;font-weight:500}
+.srow .lab.s{color:var(--shape)}.srow .lab.a{color:var(--area)}.srow .lab.d{color:var(--dist)}
+.srow .val{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right}
+input[type=range]{width:100%;accent-color:var(--ours)}
+.srow.s input{accent-color:var(--shape)}.srow.a input{accent-color:var(--area)}.srow.d input{accent-color:var(--dist)}
+.readout{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.metric{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
+.metric .k{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+.metric .v{font-family:var(--mono);font-size:17px;font-weight:500;margin-top:2px}
+.metric.s .v{color:var(--shape)}.metric.a .v{color:var(--area)}.metric.d .v{color:var(--dist)}
+.metric .cmp{font-size:10.5px;color:var(--muted);margin-top:1px}
+.tg{display:inline-flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;user-select:none}
+.tg input{accent-color:var(--ours)}
+/* vote */
+.duel{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center}
+.duelcard{padding:12px;cursor:pointer;transition:transform .12s,border-color .12s}
+.duelcard:hover{transform:translateY(-3px);border-color:var(--ours)}
+.duelcard:focus-visible{outline:2px solid var(--ours);outline-offset:2px}
+.duelcard .mapwrap{aspect-ratio:2/1.1}
+.duelcard .nm{margin-top:9px;font-family:var(--disp);font-size:17px;font-weight:600}
+.duelcard .why{font-size:12px;color:var(--muted);min-height:2.6em}
+.tag2{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;margin-left:6px;padding:1px 6px;border-radius:20px;background:var(--ours-soft);color:var(--ours)}
+.vs{font-family:var(--disp);font-style:italic;font-size:22px;color:var(--faint);text-align:center}
+.votebar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+.btn{padding:8px 16px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);cursor:pointer;color:var(--ink);font-family:var(--ui);font-size:14px}
+.btn:hover{border-color:var(--ours)}
+.status{font-family:var(--mono);font-size:11px;color:var(--faint);border:1px solid var(--line);padding:4px 9px;border-radius:20px}
+.status.live{color:var(--good);border-color:color-mix(in srgb,var(--good) 40%,var(--line))}
+.status.local{color:var(--area);border-color:color-mix(in srgb,var(--area) 40%,var(--line))}
+/* leaderboard */
+.lbgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.lbrow{display:grid;grid-template-columns:28px 96px 1fr auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.lbrow.top{border-color:var(--ours);box-shadow:0 0 0 1px var(--ours)}
+.lbrow .rk{font-family:var(--mono);color:var(--faint)}
+.lbrow .mw{width:96px;aspect-ratio:2/1.05;border-radius:7px;overflow:hidden;background:var(--inset)}
+.lbrow .nm{font-family:var(--disp);font-size:15px;font-weight:600}
+.lbrow .nm .tag2{margin-left:5px}
+.lbrow .meta{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:2px}
+.lbrow .elo{font-family:var(--mono);font-size:18px;font-weight:500;text-align:right}
+.lbrow .elo small{display:block;font-size:10px;color:var(--faint);font-weight:400}
+footer{border-top:1px solid var(--line);padding-block:22px 40px;color:var(--muted);font-size:12.5px}
+footer code{font-family:var(--mono);background:var(--inset);padding:2px 6px;border-radius:5px}
+@media (max-width:820px){.studio{grid-template-columns:1fr}.lbgrid{grid-template-columns:1fr}}
+@media (max-width:560px){.duel{grid-template-columns:1fr;gap:12px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <h1>Pareto Atlas</h1>
+      <div class="tag">Autoresearched world map projections · shape · area · distance</div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="explore">Explore</button>
+      <button role="tab" aria-selected="false" data-tab="vote">Vote</button>
+      <button role="tab" aria-selected="false" data-tab="leaderboard">Leaderboard</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- EXPLORE -->
+  <section id="explore" role="tabpanel">
+    <h2>Design a projection</h2>
+    <p class="lede">Two levers. Pick an <b>outline</b> (the boundary shape — a 3× effect on distortion), then set how much you care
+      about preserving <b style="color:var(--shape)">shapes</b>, <b style="color:var(--area)">areas</b>, and
+      <b style="color:var(--dist)">distances</b>. The sliders are constrained to sum to 100%; the machine's best map for that recipe
+      appears instantly.</p>
+    <div class="studio">
+      <div class="card mapcard">
+        <div class="mapwrap"><canvas id="mainmap"></canvas></div>
+        <div class="mapcap"><div class="name" id="mapname"></div><div class="sub" id="mapsub"></div></div>
+        <div class="legend">
+          <span><span class="sw" style="background:var(--land)"></span>Land</span>
+          <span><span class="sw" style="background:var(--shape)"></span>low angular distortion</span>
+          <span><span class="sw" style="background:var(--area)"></span>high angular distortion</span>
+          <span><label class="tg"><input type="checkbox" id="tgTissot" checked>Tissot ellipses</label></span>
+        </div>
+      </div>
+      <div class="card panel">
+        <div class="field"><label>Outline family</label><div class="chips" id="famchips"></div></div>
+        <div class="field"><label>Priorities — drag the point</label>
+          <svg id="tri" class="tri" viewBox="0 0 300 264" role="img" aria-label="shape-area-distance triangle"></svg>
+          <div class="trihint" id="trihint"></div></div>
+        <div class="field"><label>…or the constrained sliders (sum = 100%)</label>
+          <div class="sliders">
+            <div class="srow s"><span class="lab s">Shape</span><input type="range" id="slS" min="0" max="100" value="33"><span class="val" id="vS">33%</span></div>
+            <div class="srow a"><span class="lab a">Area</span><input type="range" id="slA" min="0" max="100" value="33"><span class="val" id="vA">33%</span></div>
+            <div class="srow d"><span class="lab d">Distance</span><input type="range" id="slD" min="0" max="100" value="34"><span class="val" id="vD">34%</span></div>
+          </div>
+        </div>
+        <div class="readout">
+          <div class="metric s"><div class="k">Shape err</div><div class="v" id="mShape">–</div><div class="cmp" id="mShapeCmp"></div></div>
+          <div class="metric a"><div class="k">Area err</div><div class="v" id="mArea">–</div><div class="cmp" id="mAreaCmp"></div></div>
+          <div class="metric d"><div class="k">Distance err</div><div class="v" id="mDist">–</div><div class="cmp" id="mDistCmp"></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VOTE -->
+  <section id="vote" role="tabpanel" hidden>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+      <h2>Which map do you prefer?</h2>
+      <span class="status" id="voteStatus">connecting…</span>
+    </div>
+    <p class="lede">Math ranks distortion; you rank <i>maps</i>. Click the one you'd rather hang on a wall. Every vote is saved and
+      feeds the Elo leaderboard.</p>
+    <div class="duel">
+      <div class="card duelcard" id="duelA" tabindex="0" role="button"><div class="mapwrap"><canvas id="canA"></canvas></div><div class="nm" id="nmA"></div><div class="why" id="whyA"></div></div>
+      <div class="vs">vs</div>
+      <div class="card duelcard" id="duelB" tabindex="0" role="button"><div class="mapwrap"><canvas id="canB"></canvas></div><div class="nm" id="nmB"></div><div class="why" id="whyB"></div></div>
+    </div>
+    <div class="votebar">
+      <button class="btn" id="skipBtn">Skip — new pair ↻</button>
+      <span class="mono" id="voteCount" style="font-size:12.5px;color:var(--muted)"></span>
+    </div>
+  </section>
+
+  <!-- LEADERBOARD -->
+  <section id="leaderboard" role="tabpanel" hidden>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+      <h2>Maps by Elo</h2>
+      <button class="btn" id="refreshBtn">Refresh</button>
+    </div>
+    <p class="lede">Live ranking from everyone's votes (Bradley–Terry / Elo, starting at 1000). <span id="lbTotal"></span></p>
+    <div class="lbgrid" id="lbgrid"></div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <div id="prov"></div>
+</footer>
+
+<script src="appdata.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
