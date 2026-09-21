@@ -180,7 +180,7 @@ var TABS=['explore','vote','leaderboard'];
 function show(tab){TABS.forEach(function(t){document.getElementById(t).hidden=(t!==tab);});
   [].forEach.call(document.querySelectorAll('.tabs button'),function(b){b.setAttribute('aria-selected',b.dataset.tab===tab);});
   if(tab==='explore')resizeExplore();if(tab==='vote')openVote();if(tab==='leaderboard')loadBoard();
-  history.replaceState(null,'','#'+tab);window.scrollTo(0,0);}
+  history.replaceState(null,'','#/'+tab);window.scrollTo(0,0);}
 [].forEach.call(document.querySelectorAll('.tabs button'),function(b){b.addEventListener('click',function(){show(b.dataset.tab);});});
 document.getElementById('refreshBtn').addEventListener('click',loadBoard);
 
@@ -189,5 +189,5 @@ document.getElementById('prov').innerHTML='<b>Pareto Atlas.</b> Maps discovered 
 
 /* boot */
 var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){var cur=TABS.filter(function(t){return !document.getElementById(t).hidden;})[0];if(cur==='explore')resizeExplore();if(cur==='vote'&&pair[0]){drawMini(document.getElementById('canA'),contenderFn(pair[0]));drawMini(document.getElementById('canB'),contenderFn(pair[1]));}if(cur==='leaderboard')loadBoard();},160);});
-var start=(location.hash||'#explore').slice(1);show(TABS.indexOf(start)>=0?start:'explore');
+var start=(location.hash||'').replace(/[#/]/g,'');show(TABS.indexOf(start)>=0?start:'explore');
 })();

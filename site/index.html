@@ -25,6 +25,7 @@
   --shape:#59a6e6;--area:#e6a856;--dist:#4cc493;--ours:#e766a8;--ours-soft:#3a2033;
 }}
 *{box-sizing:border-box}
+html{overflow-anchor:none}
 html,body{margin:0}
 body{background:var(--ground);color:var(--ink);font-family:var(--ui);line-height:1.55;-webkit-font-smoothing:antialiased}
 .wrap{max-width:1080px;margin:0 auto;padding-inline:20px}
@@ -56,6 +57,21 @@ canvas{display:block;width:100%;height:100%}
 .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}
 .legend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px}
 .panel{padding:18px;display:flex;flex-direction:column;gap:16px}
+/* Explore — full-bleed map with a frosted-glass HUD (layout #5) */
+#explore .studio{position:relative;display:block}
+#explore .mapcard{position:relative;padding:0;border:0;background:transparent;box-shadow:none}
+#explore .mapwrap{height:min(74vh,720px);aspect-ratio:auto;border-radius:16px}
+#explore .mapcap{position:absolute;left:16px;bottom:16px;margin:0;display:flex;flex-direction:column;gap:2px;padding:9px 13px;border-radius:12px;z-index:2}
+#explore .mapcap .name{font-size:16px}
+#explore .legend{position:absolute;right:16px;bottom:16px;margin:0;display:flex;justify-content:flex-end;max-width:54%;padding:8px 12px;border-radius:12px;z-index:2}
+#explore .panel{position:absolute;top:16px;right:16px;width:322px;max-height:calc(100% - 32px);overflow:auto;padding:16px;border-radius:16px;z-index:3}
+#explore .panel,#explore .mapcap,#explore .legend{background:color-mix(in srgb,var(--surface) 60%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.6);backdrop-filter:blur(16px) saturate(1.6);border:1px solid color-mix(in srgb,var(--ink) 14%,transparent);box-shadow:0 10px 34px rgba(10,18,30,.18),inset 0 1px 0 color-mix(in srgb,#fff 32%,transparent)}
+#explore .panel::-webkit-scrollbar{width:8px}#explore .panel::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--ink) 18%,transparent);border-radius:8px}
+@media (max-width:760px){
+  #explore .mapwrap{height:auto;aspect-ratio:2/1.25}
+  #explore .panel,#explore .mapcap,#explore .legend{position:static;width:auto;max-width:none;max-height:none;-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--surface);box-shadow:none;border:1px solid var(--line);border-radius:12px}
+  #explore .panel{margin-top:14px}#explore .mapcap{margin-top:10px;flex-direction:row;justify-content:space-between;align-items:baseline}#explore .legend{margin-top:8px;justify-content:flex-start}
+}
 .field>label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chips button{appearance:none;font-family:var(--ui);font-size:12.5px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:6px 12px;cursor:pointer}
