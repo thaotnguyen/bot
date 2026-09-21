@@ -67,26 +67,26 @@ def main():
                 "dist": round(e["eps_dist"], 4)}
     disc = [
         {"key": "vantage", "name": "Vantage", "ours": 1, "type": "lent",
-         "why": "Beats the Winkel Tripel on shape, area AND distance at once.", **champ("WinkelDominator")},
+         "why": "Lower shape, area, and distance error than the Winkel Tripel.", **champ("WinkelDominator")},
         {"key": "equipoise", "name": "Equipoise", "ours": 1, "type": "lent",
-         "why": "The most even all-rounder across all three objectives.", **champ("Triathlon")},
+         "why": "Balanced across shape, area, and distance.", **champ("Triathlon")},
         {"key": "wayfarer", "name": "Wayfarer", "ours": 1, "type": "lent",
-         "why": "Lower distance error than any classic, even the azimuthal equidistant.", **champ("Equidistant")},
+         "why": "Lowest distance error of the maps here.", **champ("Equidistant")},
         {"key": "clarity", "name": "Clarity", "ours": 1, "type": "lent",
-         "why": "Near-conformal whole world: ~3 degrees mean angular distortion.", **champ("Conformal")},
+         "why": "Near-conformal; about 3 degrees mean angular distortion.", **champ("Conformal")},
         {"key": "balance", "name": "Balance", "ours": 1, "type": "lent",
-         "why": "Near-equal-area, but far kinder to shapes than the classics.", **champ("EqualArea")},
+         "why": "Near-equal-area, with less shape distortion than the classics.", **champ("EqualArea")},
     ]
     classic_keys = ["Winkel Tripel", "Robinson", "Mollweide", "Equal Earth", "Azimuthal Equidist.", "Equirectangular"]
     cl_by = {c["name"]: c for c in r["classics"]}
     classic_contenders = [{"key": "cl_" + nm.replace(" ", "_").replace(".", ""), "name": nm, "ours": 0,
                            "type": "classic", "classic": nm,
-                           "why": {"Winkel Tripel": "National Geographic’s chosen compromise.",
-                                   "Robinson": "Rand McNally’s hand-tuned compromise.",
-                                   "Mollweide": "Equal-area ellipse, common in science.",
-                                   "Equal Earth": "Modern (2018) equal-area map.",
-                                   "Azimuthal Equidist.": "Purpose-built for distance from the center.",
-                                   "Equirectangular": "The plainest lon/lat grid."}[nm],
+                           "why": {"Winkel Tripel": "Compromise projection; National Geographic's main world map since 1998.",
+                                   "Robinson": "Compromise projection used by Rand McNally.",
+                                   "Mollweide": "Equal-area ellipse.",
+                                   "Equal Earth": "Equal-area projection, introduced in 2018.",
+                                   "Azimuthal Equidist.": "Distances from the center point are correct.",
+                                   "Equirectangular": "Longitude and latitude on a plain grid."}[nm],
                            "shape": round(cl_by[nm]["eps_shape"], 4), "area": round(cl_by[nm]["eps_area"], 4),
                            "dist": round(cl_by[nm]["eps_dist"], 4)} for nm in classic_keys]
 

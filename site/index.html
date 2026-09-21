@@ -57,20 +57,24 @@ canvas{display:block;width:100%;height:100%}
 .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}
 .legend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px}
 .panel{padding:18px;display:flex;flex-direction:column;gap:16px}
-/* Explore — full-bleed map with a frosted-glass HUD (layout #5) */
+/* Explore — full-bleed map with a control dock along the bottom (layout 10) */
 #explore .studio{position:relative;display:block}
 #explore .mapcard{position:relative;padding:0;border:0;background:transparent;box-shadow:none}
-#explore .mapwrap{height:min(74vh,720px);aspect-ratio:auto;border-radius:16px}
-#explore .mapcap{position:absolute;left:16px;bottom:16px;margin:0;display:flex;flex-direction:column;gap:2px;padding:9px 13px;border-radius:12px;z-index:2}
-#explore .mapcap .name{font-size:16px}
-#explore .legend{position:absolute;right:16px;bottom:16px;margin:0;display:flex;justify-content:flex-end;max-width:54%;padding:8px 12px;border-radius:12px;z-index:2}
-#explore .panel{position:absolute;top:16px;right:16px;width:322px;max-height:calc(100% - 32px);overflow:auto;padding:16px;border-radius:16px;z-index:3}
-#explore .panel,#explore .mapcap,#explore .legend{background:color-mix(in srgb,var(--surface) 60%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.6);backdrop-filter:blur(16px) saturate(1.6);border:1px solid color-mix(in srgb,var(--ink) 14%,transparent);box-shadow:0 10px 34px rgba(10,18,30,.18),inset 0 1px 0 color-mix(in srgb,#fff 32%,transparent)}
-#explore .panel::-webkit-scrollbar{width:8px}#explore .panel::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--ink) 18%,transparent);border-radius:8px}
+#explore .mapwrap{height:min(72vh,700px);aspect-ratio:auto;border-radius:16px}
+#explore .mapcap{position:absolute;left:16px;top:16px;margin:0;display:flex;flex-direction:column;gap:2px;padding:8px 12px;border-radius:12px;z-index:2}
+#explore .mapcap .name{font-size:14px}
+#explore .legend{position:absolute;right:16px;top:16px;margin:0;display:flex;justify-content:flex-end;gap:12px;max-width:58%;padding:8px 12px;border-radius:12px;z-index:2}
+#explore .panel{position:absolute;left:16px;right:16px;bottom:16px;margin:0;padding:14px 18px;border-radius:16px;z-index:3;display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:22px}
+#explore .panel>.field{flex:1 1 190px;min-width:150px;margin:0}
+#explore .panel .readout{flex:2 1 300px}
+#explore .tri{max-width:116px;margin:0 auto}
+#explore .panel,#explore .mapcap,#explore .legend{background:color-mix(in srgb,var(--surface) 62%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.5);backdrop-filter:blur(16px) saturate(1.5);border:1px solid color-mix(in srgb,var(--ink) 12%,transparent);box-shadow:0 8px 30px rgba(10,18,30,.16),inset 0 1px 0 color-mix(in srgb,#fff 30%,transparent)}
 @media (max-width:760px){
-  #explore .mapwrap{height:auto;aspect-ratio:2/1.25}
-  #explore .panel,#explore .mapcap,#explore .legend{position:static;width:auto;max-width:none;max-height:none;-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--surface);box-shadow:none;border:1px solid var(--line);border-radius:12px}
-  #explore .panel{margin-top:14px}#explore .mapcap{margin-top:10px;flex-direction:row;justify-content:space-between;align-items:baseline}#explore .legend{margin-top:8px;justify-content:flex-start}
+  #explore .mapwrap{height:auto;aspect-ratio:2/1.3}
+  #explore .panel{position:static;flex-direction:column;align-items:stretch;gap:16px;margin-top:14px;-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--surface);box-shadow:none;border:1px solid var(--line)}
+  #explore .panel>.field,#explore .panel .readout{flex:0 0 auto}
+  #explore .tri{max-width:200px}
+  #explore .mapcap,#explore .legend{position:static;margin-top:10px;max-width:none;justify-content:flex-start;-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--surface);box-shadow:none;border:1px solid var(--line)}
 }
 .field>label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -78,13 +82,6 @@ canvas{display:block;width:100%;height:100%}
 .chips button[aria-pressed="true"]{background:var(--ours);border-color:var(--ours);color:#fff}
 .tri{width:100%;touch-action:none;cursor:crosshair;display:block}
 .trihint{font-size:12px;color:var(--muted);margin-top:2px;text-align:center}
-.sliders{display:flex;flex-direction:column;gap:10px}
-.srow{display:grid;grid-template-columns:64px 1fr 40px;align-items:center;gap:10px}
-.srow .lab{font-size:12.5px;font-weight:500}
-.srow .lab.s{color:var(--shape)}.srow .lab.a{color:var(--area)}.srow .lab.d{color:var(--dist)}
-.srow .val{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right}
-input[type=range]{width:100%;accent-color:var(--ours)}
-.srow.s input{accent-color:var(--shape)}.srow.a input{accent-color:var(--area)}.srow.d input{accent-color:var(--dist)}
 .readout{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .metric{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
 .metric .k{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
@@ -132,7 +129,7 @@ footer code{font-family:var(--mono);background:var(--inset);padding:2px 6px;bord
   <div class="wrap">
     <div class="brand">
       <h1>Pareto Atlas</h1>
-      <div class="tag">Autoresearched world map projections · shape · area · distance</div>
+      <div class="tag">Map projections optimized for shape, area, and distance.</div>
     </div>
     <nav class="tabs" role="tablist">
       <button role="tab" aria-selected="true" data-tab="explore">Explore</button>
@@ -146,10 +143,9 @@ footer code{font-family:var(--mono);background:var(--inset);padding:2px 6px;bord
   <!-- EXPLORE -->
   <section id="explore" role="tabpanel">
     <h2>Design a projection</h2>
-    <p class="lede">Two levers. Pick an <b>outline</b> (the boundary shape — a 3× effect on distortion), then set how much you care
-      about preserving <b style="color:var(--shape)">shapes</b>, <b style="color:var(--area)">areas</b>, and
-      <b style="color:var(--dist)">distances</b>. The sliders are constrained to sum to 100%; the machine's best map for that recipe
-      appears instantly.</p>
+    <p class="lede">Pick an <b>outline</b>, then drag the triangle to weight
+      <b style="color:var(--shape)">shape</b>, <b style="color:var(--area)">area</b>, and
+      <b style="color:var(--dist)">distance</b>. The map with the least distortion for those weights is shown.</p>
     <div class="studio">
       <div class="card mapcard">
         <div class="mapwrap"><canvas id="mainmap"></canvas></div>
@@ -162,17 +158,10 @@ footer code{font-family:var(--mono);background:var(--inset);padding:2px 6px;bord
         </div>
       </div>
       <div class="card panel">
-        <div class="field"><label>Outline family</label><div class="chips" id="famchips"></div></div>
-        <div class="field"><label>Priorities — drag the point</label>
-          <svg id="tri" class="tri" viewBox="0 0 300 264" role="img" aria-label="shape-area-distance triangle"></svg>
+        <div class="field"><label>Outline</label><div class="chips" id="famchips"></div></div>
+        <div class="field"><label>Weighting</label>
+          <svg id="tri" class="tri" viewBox="0 0 300 264" role="img" aria-label="shape, area, distance weighting"></svg>
           <div class="trihint" id="trihint"></div></div>
-        <div class="field"><label>…or the constrained sliders (sum = 100%)</label>
-          <div class="sliders">
-            <div class="srow s"><span class="lab s">Shape</span><input type="range" id="slS" min="0" max="100" value="33"><span class="val" id="vS">33%</span></div>
-            <div class="srow a"><span class="lab a">Area</span><input type="range" id="slA" min="0" max="100" value="33"><span class="val" id="vA">33%</span></div>
-            <div class="srow d"><span class="lab d">Distance</span><input type="range" id="slD" min="0" max="100" value="34"><span class="val" id="vD">34%</span></div>
-          </div>
-        </div>
         <div class="readout">
           <div class="metric s"><div class="k">Shape err</div><div class="v" id="mShape">–</div><div class="cmp" id="mShapeCmp"></div></div>
           <div class="metric a"><div class="k">Area err</div><div class="v" id="mArea">–</div><div class="cmp" id="mAreaCmp"></div></div>
@@ -188,15 +177,14 @@ footer code{font-family:var(--mono);background:var(--inset);padding:2px 6px;bord
       <h2>Which map do you prefer?</h2>
       <span class="status" id="voteStatus">connecting…</span>
     </div>
-    <p class="lede">Math ranks distortion; you rank <i>maps</i>. Click the one you'd rather hang on a wall. Every vote is saved and
-      feeds the Elo leaderboard.</p>
+    <p class="lede">Pick the one you prefer. Votes are recorded and used to rank the maps by Elo.</p>
     <div class="duel">
       <div class="card duelcard" id="duelA" tabindex="0" role="button"><div class="mapwrap"><canvas id="canA"></canvas></div><div class="nm" id="nmA"></div><div class="why" id="whyA"></div></div>
       <div class="vs">vs</div>
       <div class="card duelcard" id="duelB" tabindex="0" role="button"><div class="mapwrap"><canvas id="canB"></canvas></div><div class="nm" id="nmB"></div><div class="why" id="whyB"></div></div>
     </div>
     <div class="votebar">
-      <button class="btn" id="skipBtn">Skip — new pair ↻</button>
+      <button class="btn" id="skipBtn">New pair</button>
       <span class="mono" id="voteCount" style="font-size:12.5px;color:var(--muted)"></span>
     </div>
   </section>
@@ -207,7 +195,7 @@ footer code{font-family:var(--mono);background:var(--inset);padding:2px 6px;bord
       <h2>Maps by Elo</h2>
       <button class="btn" id="refreshBtn">Refresh</button>
     </div>
-    <p class="lede">Live ranking from everyone's votes (Bradley–Terry / Elo, starting at 1000). <span id="lbTotal"></span></p>
+    <p class="lede">Maps ranked by Elo from all votes. Each map starts at 1000. <span id="lbTotal"></span></p>
     <div class="lbgrid" id="lbgrid"></div>
   </section>
 </main>

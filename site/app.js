@@ -78,7 +78,7 @@ function step(){if(!curSet||!tgtSet){anim=0;return;}var done=true;for(var i=0;i<
   renderMain(!done);if(!done)requestAnimationFrame(step);else{anim=0;curSet=tgtSet.map(function(pl){return pl.map(function(p){return p.slice();});});renderMain(false);}}
 function renderMain(animating){if(!mainDim)return;drawSet(mainDim.ctx,curSet,mainDim.w,mainDim.h,{grat:true});if(!animating&&tissot&&curFn&&curFt)drawTissot(mainDim.ctx,curFn,curFt);}
 function refreshExplore(instant){var fam=famByType[state.type],it=idw(fam,state.w),fn=fromParams(state.type,it.params);
-  document.getElementById('mapname').innerHTML=fam.outline.replace(/ \(.*/,'')+' <span class="tag">discovered</span>';
+  document.getElementById('mapname').textContent=fam.outline.replace(/ \(.*/,'');
   document.getElementById('mapsub').textContent='shape '+Math.round(state.w[0]*100)+'% · area '+Math.round(state.w[1]*100)+'% · distance '+Math.round(state.w[2]*100)+'%';
   setMetrics(it.shape,it.area,it.dist);
   if(instant&&mainDim){curFn=fn;curFt=fit(fn,mainDim.w,mainDim.h,16);curSet=screenSet(fn,mainDim.w,mainDim.h,16);tgtSet=curSet.map(function(pl){return pl.map(function(p){return p.slice();});});renderMain(false);}else setTarget(fn);
@@ -87,17 +87,7 @@ function setMetrics(sh,ar,di){var W=D.winkel;
   document.getElementById('mShape').textContent=sh.toFixed(3);document.getElementById('mArea').textContent=ar.toFixed(3);document.getElementById('mDist').textContent=di.toFixed(3);
   document.getElementById('mShapeCmp').innerHTML=cmp((sh-W.shape)/W.shape*100);document.getElementById('mAreaCmp').innerHTML=cmp((ar-W.area)/W.area*100);document.getElementById('mDistCmp').innerHTML=cmp((di-W.dist)/W.dist*100);}
 function cmp(p){var c=p<-0.5?'var(--good)':(p>0.5?'var(--bad)':'var(--muted)');return '<b style="color:'+c+'">'+(p<0?'−':'+')+Math.abs(p).toFixed(0)+'%</b> vs WT';}
-function setWeights(w,fromTri){var s=w[0]+w[1]+w[2]||1;state.w=[w[0]/s,w[1]/s,w[2]/s];syncSliders();refreshExplore(false);}
-function syncSliders(){document.getElementById('slS').value=Math.round(state.w[0]*100);document.getElementById('slA').value=Math.round(state.w[1]*100);document.getElementById('slD').value=Math.round(state.w[2]*100);
-  document.getElementById('vS').textContent=Math.round(state.w[0]*100)+'%';document.getElementById('vA').textContent=Math.round(state.w[1]*100)+'%';document.getElementById('vD').textContent=Math.round(state.w[2]*100)+'%';}
-/* constrained sliders: moving one rebalances the other two proportionally */
-function sliderChange(idx,val){var v=clamp(val/100,0,1),others=[0,1,2].filter(function(i){return i!==idx;});
-  var rem=1-v,o0=state.w[others[0]],o1=state.w[others[1]],sum=o0+o1;var nw=[0,0,0];nw[idx]=v;
-  if(sum<1e-6){nw[others[0]]=rem/2;nw[others[1]]=rem/2;}else{nw[others[0]]=rem*o0/sum;nw[others[1]]=rem*o1/sum;}
-  state.w=nw;syncSliders();refreshExplore(false);}
-document.getElementById('slS').addEventListener('input',function(e){sliderChange(0,+e.target.value);});
-document.getElementById('slA').addEventListener('input',function(e){sliderChange(1,+e.target.value);});
-document.getElementById('slD').addEventListener('input',function(e){sliderChange(2,+e.target.value);});
+function setWeights(w){var s=w[0]+w[1]+w[2]||1;state.w=[w[0]/s,w[1]/s,w[2]/s];refreshExplore(false);}
 /* outline chips */
 (function(){var box=document.getElementById('famchips');D.families.forEach(function(f){var b=document.createElement('button');b.textContent=f.outline.replace(/ \(.*/,'');b.setAttribute('aria-pressed',f.type===state.type);b.dataset.type=f.type;b.title=f.outline;box.appendChild(b);
   b.addEventListener('click',function(){state.type=f.type;[].forEach.call(box.children,function(c){c.setAttribute('aria-pressed',c.dataset.type===state.type);});refreshExplore(false);});});})();
@@ -107,17 +97,17 @@ function bary2xy(w){return {x:w[0]*Sc.x+w[1]*Ac.x+w[2]*Dc.x,y:w[0]*Sc.y+w[1]*Ac.
 function xy2bary(px,py){var det=(Ac.y-Dc.y)*(Sc.x-Dc.x)+(Dc.x-Ac.x)*(Sc.y-Dc.y);
   var w0=((Ac.y-Dc.y)*(px-Dc.x)+(Dc.x-Ac.x)*(py-Dc.y))/det,w1=((Dc.y-Sc.y)*(px-Dc.x)+(Sc.x-Dc.x)*(py-Dc.y))/det,w2=1-w0-w1;
   return [Math.max(0,w0),Math.max(0,w1),Math.max(0,w2)];}
-function drawTri(){var fam=famByType[state.type],Cg=css('--good'),Cf=css('--faint'),Cl=css('--line'),Cs=css('--shape'),Ca=css('--area'),Cd=css('--dist');
-  var norms=fam.points.map(function(p){return p.norm;}),nmin=Math.min.apply(null,norms),nmax=Math.max.apply(null,norms),N=14,s='';
-  function cell(w){var it=0,ws=0;for(var q=0;q<fam.points.length;q++){var d2=0;for(var t=0;t<3;t++){var dd=w[t]-fam.points[q].w[t];d2+=dd*dd;}var wt=1/(Math.pow(d2,3)+1e-9);it+=wt*fam.points[q].norm;ws+=wt;}return mix(Cg,Cf,clamp((it/ws-nmin)/(nmax-nmin||1),0,1));}
+function drawTri(){var fam=famByType[state.type],Cf=css('--faint'),Cl=css('--line'),Cd=css('--dist');
+  var norms=fam.points.map(function(p){return p.norm;}),nmin=Math.min.apply(null,norms),nmax=Math.max.apply(null,norms),N=12,s='';
+  function cell(w){var it=0,ws=0;for(var q=0;q<fam.points.length;q++){var d2=0;for(var t=0;t<3;t++){var dd=w[t]-fam.points[q].w[t];d2+=dd*dd;}var wt=1/(Math.pow(d2,3)+1e-9);it+=wt*fam.points[q].norm;ws+=wt;}return mix(Cd,Cf,clamp((it/ws-nmin)/(nmax-nmin||1),0,1));}
   function pt(i,j){var c=bary2xy([(N-i-j)/N,i/N,j/N]);return c.x+','+c.y;}
-  for(var i=0;i<N;i++)for(var j=0;j<N-i;j++){s+='<polygon points="'+pt(i,j)+' '+pt(i+1,j)+' '+pt(i,j+1)+'" fill="'+cell([(N-i-j-.667)/N,(i+.333)/N,(j+.333)/N])+'"/>';if(i+j<N-1)s+='<polygon points="'+pt(i+1,j)+' '+pt(i,j+1)+' '+pt(i+1,j+1)+'" fill="'+cell([(N-i-j-1.333)/N,(i+.667)/N,(j+.667)/N])+'"/>';}
-  s+='<polygon points="'+Sc.x+','+Sc.y+' '+Ac.x+','+Ac.y+' '+Dc.x+','+Dc.y+'" fill="none" stroke="'+Cl+'" stroke-width="1.5"/>';
-  s+='<text x="'+Sc.x+'" y="'+(Sc.y-6)+'" fill="'+Cs+'" font-size="12" font-weight="600" text-anchor="middle">SHAPE</text>';
-  s+='<text x="'+(Ac.x-2)+'" y="'+(Ac.y+16)+'" fill="'+Ca+'" font-size="12" font-weight="600">AREA</text>';
-  s+='<text x="'+(Dc.x+2)+'" y="'+(Dc.y+16)+'" fill="'+Cd+'" font-size="12" font-weight="600" text-anchor="end">DISTANCE</text>';
-  var h=bary2xy(state.w);s+='<circle cx="'+h.x+'" cy="'+h.y+'" r="7" fill="'+css('--ours')+'" stroke="#fff" stroke-width="2"/>';
-  TRI.innerHTML=s;document.getElementById('trihint').textContent='greener = lower total distortion for this outline';}
+  for(var i=0;i<N;i++)for(var j=0;j<N-i;j++){s+='<polygon points="'+pt(i,j)+' '+pt(i+1,j)+' '+pt(i,j+1)+'" fill="'+cell([(N-i-j-.667)/N,(i+.333)/N,(j+.333)/N])+'" fill-opacity="0.3"/>';if(i+j<N-1)s+='<polygon points="'+pt(i+1,j)+' '+pt(i,j+1)+' '+pt(i+1,j+1)+'" fill="'+cell([(N-i-j-1.333)/N,(i+.667)/N,(j+.667)/N])+'" fill-opacity="0.3"/>';}
+  s+='<polygon points="'+Sc.x+','+Sc.y+' '+Ac.x+','+Ac.y+' '+Dc.x+','+Dc.y+'" fill="none" stroke="'+Cl+'" stroke-width="1"/>';
+  s+='<text x="'+Sc.x+'" y="'+(Sc.y-5)+'" fill="'+Cf+'" font-size="9" font-weight="600" text-anchor="middle">SHAPE</text>';
+  s+='<text x="'+(Ac.x-2)+'" y="'+(Ac.y+15)+'" fill="'+Cf+'" font-size="9" font-weight="600">AREA</text>';
+  s+='<text x="'+(Dc.x+2)+'" y="'+(Dc.y+15)+'" fill="'+Cf+'" font-size="9" font-weight="600" text-anchor="end">DISTANCE</text>';
+  var h=bary2xy(state.w);s+='<circle cx="'+h.x+'" cy="'+h.y+'" r="6" fill="'+css('--ours')+'" stroke="#fff" stroke-width="2"/>';
+  TRI.innerHTML=s;var th=document.getElementById('trihint');if(th)th.textContent='drag to weight shape · area · distance';}
 function triPoint(e){var r=TRI.getBoundingClientRect(),cx=(e.touches?e.touches[0].clientX:e.clientX),cy=(e.touches?e.touches[0].clientY:e.clientY);setWeights(xy2bary((cx-r.left)/r.width*300,(cy-r.top)/r.height*264),true);}
 var dragging=false;
 TRI.addEventListener('pointerdown',function(e){dragging=true;TRI.setPointerCapture(e.pointerId);triPoint(e);});
@@ -151,7 +141,7 @@ function newPair(){var idx=CT.map(function(_,i){return i;});for(var i=idx.length
   document.getElementById('nmA').innerHTML=a.name+(a.ours?' <span class="tag2">AI</span>':'');document.getElementById('nmB').innerHTML=b.name+(b.ours?' <span class="tag2">AI</span>':'');
   document.getElementById('whyA').textContent=a.why;document.getElementById('whyB').textContent=b.why;
   drawMini(document.getElementById('canA'),contenderFn(a));drawMini(document.getElementById('canB'),contenderFn(b));}
-function vote(i){if(!pair[0])return;var w=pair[i],l=pair[1-i];nVotes++;document.getElementById('voteCount').textContent='you’ve cast '+nVotes+' vote'+(nVotes===1?'':'s')+' this visit';
+function vote(i){if(!pair[0])return;var w=pair[i],l=pair[1-i];nVotes++;document.getElementById('voteCount').textContent=nVotes+' vote'+(nVotes===1?'':'s')+' this session';
   postVote(w.key,l.key).then(function(){setStatus(document.getElementById('voteStatus'));});newPair();}
 document.getElementById('duelA').addEventListener('click',function(){vote(0);});
 document.getElementById('duelB').addEventListener('click',function(){vote(1);});
@@ -164,7 +154,7 @@ function openVote(){if(!voteInit){voteInit=true;newPair();getLeaderboard().then(
 /* ---------- LEADERBOARD ---------- */
 function loadBoard(){var grid=document.getElementById('lbgrid');
   getLeaderboard().then(function(j){
-    document.getElementById('lbTotal').textContent=(j.total||0)+' vote'+((j.total||0)===1?'':'s')+' so far'+(api.mode==='local'?' (local only — deploy with a store to share).':'.');
+    document.getElementById('lbTotal').textContent=(j.total||0)+' vote'+((j.total||0)===1?'':'s')+' recorded'+(api.mode==='local'?' (this browser only).':'.');
     var st=(j.standings||[]).slice().filter(function(r){return byKey[r.key];}).sort(function(a,b){return b.elo-a.elo;});
     var maxE=Math.max.apply(null,st.map(function(r){return r.elo;})),minE=Math.min.apply(null,st.map(function(r){return r.elo;}));
     grid.innerHTML='';
@@ -185,7 +175,7 @@ function show(tab){TABS.forEach(function(t){document.getElementById(t).hidden=(t
 document.getElementById('refreshBtn').addEventListener('click',loadBoard);
 
 /* provenance */
-document.getElementById('prov').innerHTML='<b>Pareto Atlas.</b> Maps discovered by pure-Python gradient descent over symmetric-polynomial projection families, scored via Tissot’s indicatrix (shape, area) and great-circle vs. map distance over thousands of point pairs. Coastlines: <code>Natural Earth 110m</code>. Votes are stored server-side (Upstash Redis) when deployed, else in your browser. Source & method: the project README.';
+document.getElementById('prov').innerHTML='Projections found by gradient descent over polynomial projection families, scored with Tissot’s indicatrix (shape and area) and great-circle vs. map distance over sampled point pairs. Coastlines: <code>Natural Earth 110m</code>. Votes are stored in Upstash Redis when a store is configured, otherwise in your browser.';
 
 /* boot */
 var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){var cur=TABS.filter(function(t){return !document.getElementById(t).hidden;})[0];if(cur==='explore')resizeExplore();if(cur==='vote'&&pair[0]){drawMini(document.getElementById('canA'),contenderFn(pair[0]));drawMini(document.getElementById('canB'),contenderFn(pair[1]));}if(cur==='leaderboard')loadBoard();},160);});
