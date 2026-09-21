@@ -75,6 +75,12 @@ canvas{display:block;width:100%;height:100%}
 #explore .panel .readout{flex:2 1 300px}
 #explore .tri{max-width:116px;margin:0 auto}
 #explore .panel,#explore .mapcap,#explore .legend{background:color-mix(in srgb,var(--surface) 62%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.5);backdrop-filter:blur(16px) saturate(1.5);border:1px solid color-mix(in srgb,var(--ink) 12%,transparent);box-shadow:0 8px 30px rgba(10,18,30,.16),inset 0 1px 0 color-mix(in srgb,#fff 30%,transparent)}
+#mainmap{cursor:grab;touch-action:pan-y}
+#mainmap.grabbing{cursor:grabbing}
+#explore .zoomctl{position:absolute;right:12px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:5px;z-index:4}
+#explore .zoomctl button{width:34px;height:34px;padding:0;font-family:var(--ui);font-size:19px;line-height:1;font-weight:500;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);background:color-mix(in srgb,var(--surface) 62%,transparent);-webkit-backdrop-filter:blur(16px) saturate(1.5);backdrop-filter:blur(16px) saturate(1.5);border:1px solid color-mix(in srgb,var(--ink) 12%,transparent);border-radius:9px;box-shadow:0 8px 30px rgba(10,18,30,.16)}
+#explore .zoomctl button:hover{border-color:var(--ours)}
+#explore .zoomctl #zReset{font-size:15px}
 @media (max-width:760px){
   #explore .mapwrap{height:auto;aspect-ratio:2/1.3}
   #explore .panel{position:static;flex-direction:column;align-items:stretch;gap:16px;margin-top:14px;-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--surface);box-shadow:none;border:1px solid var(--line)}
@@ -154,7 +160,13 @@ footer code{font-family:var(--mono);background:var(--inset);padding:2px 6px;bord
       <b style="color:var(--dist)">distance</b>. The map with the least distortion for those weights is shown.</p>
     <div class="studio">
       <div class="card mapcard">
-        <div class="mapwrap"><canvas id="mainmap"></canvas></div>
+        <div class="mapwrap"><canvas id="mainmap" title="Scroll or pinch to zoom · drag to pan · double-click to reset"></canvas>
+          <div class="zoomctl">
+            <button id="zIn" type="button" aria-label="Zoom in">+</button>
+            <button id="zOut" type="button" aria-label="Zoom out">−</button>
+            <button id="zReset" type="button" aria-label="Reset view" title="Reset view">⟲</button>
+          </div>
+        </div>
         <div class="mapcap"><div class="name" id="mapname"></div><div class="sub" id="mapsub"></div></div>
         <div class="legend">
           <span><span class="sw" style="background:var(--land)"></span>Land</span>
