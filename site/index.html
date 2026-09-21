@@ -18,12 +18,18 @@
   --disp:"Fraunces",Georgia,serif;--ui:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace;
   --sh:none;--r:10px;
 }
-@media (prefers-color-scheme:dark){:root{
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --ground:#0b131d;--surface:#101b28;--surface-2:#16263a;--inset:#0d1723;
   --ink:#e7edf3;--muted:#93a4b5;--faint:#6a7d90;--line:#23374a;
   --ocean:#123049;--land:#33463b;--landline:#4c6a52;
   --shape:#59a6e6;--area:#e6a856;--dist:#4cc493;--ours:#e766a8;--ours-soft:#3a2033;
 }}
+:root[data-theme="dark"]{
+  --ground:#0b131d;--surface:#101b28;--surface-2:#16263a;--inset:#0d1723;
+  --ink:#e7edf3;--muted:#93a4b5;--faint:#6a7d90;--line:#23374a;
+  --ocean:#123049;--land:#33463b;--landline:#4c6a52;
+  --shape:#59a6e6;--area:#e6a856;--dist:#4cc493;--ours:#e766a8;--ours-soft:#3a2033;
+}
 *{box-sizing:border-box}
 html{overflow-anchor:none}
 html,body{margin:0}
